@@ -1,4 +1,12 @@
+# Editor specific files
+.DS_Store
+.atom/
+.idea
+.vscode/
+*.iml
+
 # Files and directories created by pub
+.pub/
 .dart_tool/
 .packages
 build/
