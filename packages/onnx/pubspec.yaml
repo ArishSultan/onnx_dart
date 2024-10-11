@@ -1,0 +1,18 @@
+name: onnx
+description: A cross-platform Dart SDK for interacting with ONNX models using the official ONNX Runtime, enabling machine learning model inference in your Dart and Flutter applications.
+
+version: 1.0.0+dev.1
+
+homepage: https://github.com/ArishSultan/onnx_dart
+repository: https://github.com/ArishSultan/onnx_dart.git
+issue_tracker: https://github.com/ArishSultan/onnx_dart/issues
+documentation: https://github.com/ArishSultan/onnx_dart#readme
+
+environment:
+  sdk: ^3.5.0
+
+dev_dependencies:
+  lints: ^4.0.0
+  test: ^1.24.0
+
+changelog: https://github.com/ArishSultan/onnx_dart/blob/main/CHANGELOG.md
