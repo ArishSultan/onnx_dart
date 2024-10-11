@@ -1,19 +1,18 @@
-name: onnx
-description: A cross-platform Dart SDK for interacting with ONNX models using the official ONNX Runtime, enabling machine learning model inference in your Dart and Flutter applications.
+name: onnx_ffi
+description: A Dart FFI-based implementation of the `onnx` package, providing native bindings to ONNX Runtime C API for high-performance ONNX model inference.
 
 version: 1.0.0+dev.1
 
 homepage: https://github.com/ArishSultan/onnx_dart
 repository: https://github.com/ArishSultan/onnx_dart.git
 issue_tracker: https://github.com/ArishSultan/onnx_dart/issues
-documentation: https://github.com/ArishSultan/onnx_dart#readme
+documentation: https://github.com/ArishSultan/onnx_dart/blob/main/packages/onnx_ffi/README.md
 
 platforms:
   android:
   ios:
   linux:
   macos:
-  web:
   windows:
 
 environment:
