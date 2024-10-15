@@ -2,6 +2,4 @@ output: 'lib/onnxruntime_bindings.dart'
 headers:
   entry-points:
     - '../../thirdparty/onnxruntime/include/onnxruntime/core/session\onnxruntime_c_api.h'
-compiler-opts:
-  - "C:\\ProgramData\\mingw64\\mingw64\\lib\\gcc\\x86_64-w64-mingw32\\13.2.0\\include"
 ignore-source-errors: true
