@@ -1,5 +1,0 @@
-output: 'lib/onnxruntime_bindings.dart'
-headers:
-  entry-points:
-    - '../../thirdparty/onnxruntime/include/onnxruntime/core/session\onnxruntime_c_api.h'
-ignore-source-errors: true

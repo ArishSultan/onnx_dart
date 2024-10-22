@@ -1,0 +1,13 @@
+name: OrtFFI
+description: Bindings for onnxruntime c api
+
+output: 'lib/ffigen/bindings.dart'
+
+headers:
+  entry-points:
+    - ../../thirdparty/onnxruntime/include/onnxruntime/core/session/onnxruntime_c_api.h
+
+  include-directives:
+    - '**/core/**'
+
+comments: false
