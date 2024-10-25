@@ -1,35 +1,24 @@
 library;
 
 import 'dart:ffi';
+
 import 'package:ffi/ffi.dart';
 
-import 'ffigen/bindings.dart';
-import 'src/internal/ffi_object.dart';
+import '../../ffigen/bindings.dart';
+
+import 'src/internal/typedefs.dart';
+import 'src/helpers/native_object.dart';
+
+part 'src/internal/globals.dart';
 
 part 'src/environment.dart';
 
 part 'src/logging_level.dart';
 
-late OrtFFI _ortFFI;
-late OrtApi _ortApi;
+part 'src/status.dart';
 
-void main() {
-  final lib = DynamicLibrary.open(
-    '/Users/arish/Downloads/onnxruntime-osx-arm64-1.19.2/lib/libonnxruntime.1.19.2.dylib',
-  );
+void loadLibrary(String path, [int version = 19]) {
+  assert(version <= 19, 'MAX version allowed is 19.');
 
-  _ortFFI = OrtFFI(lib);
-
-  _ortApi = _ortFFI.OrtGetApiBase()
-      .ref
-      .GetApi
-      .asFunction<Pointer<OrtApi> Function(int)>(isLeaf: true)(19)
-      .ref;
-  // final version = _ortFFI.OrtGetApiBase()
-  //     .ref
-  //     .GetVersionString
-  //     .asFunction<Pointer<Char> Function()>(isLeaf: true)()
-  //     .cast<Utf8>()
-  //     .toDartString();
-  //
+  _setupGlobals(DynamicLibrary.open(path), version);
 }
