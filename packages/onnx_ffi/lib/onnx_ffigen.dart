@@ -1,24 +1,11 @@
-library;
-
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
 
-import '../../ffigen/bindings.dart';
+import 'ffigen/bindings.dart';
+import 'ffigen/typedefs.dart';
 
-import 'src/internal/typedefs.dart';
-import 'src/helpers/native_object.dart';
+import 'src/runtime.dart';
+export 'src/runtime.dart';
 
-part 'src/internal/globals.dart';
-
-part 'src/environment.dart';
-
-part 'src/logging_level.dart';
-
-part 'src/status.dart';
-
-void loadLibrary(String path, [int version = 19]) {
-  assert(version <= 19, 'MAX version allowed is 19.');
-
-  _setupGlobals(DynamicLibrary.open(path), version);
-}
+part 'src/resource.dart';

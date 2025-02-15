@@ -5,16 +5,17 @@
 import 'dart:ffi' as ffi;
 
 /// Bindings for onnxruntime c api
-class OrtFFI {
+class OrtBindings {
   /// Holds the symbol lookup function.
   final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
       _lookup;
 
   /// The symbols are looked up in [dynamicLibrary].
-  OrtFFI(ffi.DynamicLibrary dynamicLibrary) : _lookup = dynamicLibrary.lookup;
+  OrtBindings(ffi.DynamicLibrary dynamicLibrary)
+      : _lookup = dynamicLibrary.lookup;
 
   /// The symbols are looked up with [lookup].
-  OrtFFI.fromLookup(
+  OrtBindings.fromLookup(
       ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
           lookup)
       : _lookup = lookup;
@@ -27,7 +28,8 @@ class OrtFFI {
       _lookup<ffi.NativeFunction<ffi.Pointer<OrtApiBase> Function()>>(
           'OrtGetApiBase');
   late final _OrtGetApiBase =
-      _OrtGetApiBasePtr.asFunction<ffi.Pointer<OrtApiBase> Function()>();
+      _OrtGetApiBasePtr.asFunction<ffi.Pointer<OrtApiBase> Function()>(
+          isLeaf: true);
 
   OrtStatusPtr OrtSessionOptionsAppendExecutionProvider_CUDA(
     ffi.Pointer<OrtSessionOptions> options,
@@ -45,7 +47,8 @@ class OrtFFI {
               ffi.Int)>>('OrtSessionOptionsAppendExecutionProvider_CUDA');
   late final _OrtSessionOptionsAppendExecutionProvider_CUDA =
       _OrtSessionOptionsAppendExecutionProvider_CUDAPtr.asFunction<
-          OrtStatusPtr Function(ffi.Pointer<OrtSessionOptions>, int)>();
+          OrtStatusPtr Function(
+              ffi.Pointer<OrtSessionOptions>, int)>(isLeaf: true);
 
   OrtStatusPtr OrtSessionOptionsAppendExecutionProvider_ROCM(
     ffi.Pointer<OrtSessionOptions> options,
@@ -63,7 +66,8 @@ class OrtFFI {
               ffi.Int)>>('OrtSessionOptionsAppendExecutionProvider_ROCM');
   late final _OrtSessionOptionsAppendExecutionProvider_ROCM =
       _OrtSessionOptionsAppendExecutionProvider_ROCMPtr.asFunction<
-          OrtStatusPtr Function(ffi.Pointer<OrtSessionOptions>, int)>();
+          OrtStatusPtr Function(
+              ffi.Pointer<OrtSessionOptions>, int)>(isLeaf: true);
 
   OrtStatusPtr OrtSessionOptionsAppendExecutionProvider_MIGraphX(
     ffi.Pointer<OrtSessionOptions> options,
@@ -81,7 +85,8 @@ class OrtFFI {
               ffi.Int)>>('OrtSessionOptionsAppendExecutionProvider_MIGraphX');
   late final _OrtSessionOptionsAppendExecutionProvider_MIGraphX =
       _OrtSessionOptionsAppendExecutionProvider_MIGraphXPtr.asFunction<
-          OrtStatusPtr Function(ffi.Pointer<OrtSessionOptions>, int)>();
+          OrtStatusPtr Function(
+              ffi.Pointer<OrtSessionOptions>, int)>(isLeaf: true);
 
   OrtStatusPtr OrtSessionOptionsAppendExecutionProvider_Dnnl(
     ffi.Pointer<OrtSessionOptions> options,
@@ -99,7 +104,8 @@ class OrtFFI {
               ffi.Int)>>('OrtSessionOptionsAppendExecutionProvider_Dnnl');
   late final _OrtSessionOptionsAppendExecutionProvider_Dnnl =
       _OrtSessionOptionsAppendExecutionProvider_DnnlPtr.asFunction<
-          OrtStatusPtr Function(ffi.Pointer<OrtSessionOptions>, int)>();
+          OrtStatusPtr Function(
+              ffi.Pointer<OrtSessionOptions>, int)>(isLeaf: true);
 
   OrtStatusPtr OrtSessionOptionsAppendExecutionProvider_Tensorrt(
     ffi.Pointer<OrtSessionOptions> options,
@@ -117,7 +123,8 @@ class OrtFFI {
               ffi.Int)>>('OrtSessionOptionsAppendExecutionProvider_Tensorrt');
   late final _OrtSessionOptionsAppendExecutionProvider_Tensorrt =
       _OrtSessionOptionsAppendExecutionProvider_TensorrtPtr.asFunction<
-          OrtStatusPtr Function(ffi.Pointer<OrtSessionOptions>, int)>();
+          OrtStatusPtr Function(
+              ffi.Pointer<OrtSessionOptions>, int)>(isLeaf: true);
 }
 
 enum ONNXTensorElementDataType {
@@ -372,6 +379,8 @@ final class OrtShapeInferContext extends ffi.Opaque {}
 
 final class OrtLoraAdapter extends ffi.Opaque {}
 
+typedef OrtStatusPtr = ffi.Pointer<OrtStatus>;
+
 final class OrtAllocator extends ffi.Struct {
   @ffi.Uint32()
   external int version;
@@ -396,6 +405,23 @@ final class OrtAllocator extends ffi.Struct {
           ffi.Pointer<ffi.Void> Function(
               ffi.Pointer<OrtAllocator> this_, ffi.Size size)>> Reserve;
 }
+
+typedef OrtLoggingFunctionFunction = ffi.Void Function(
+    ffi.Pointer<ffi.Void> param,
+    ffi.UnsignedInt severity,
+    ffi.Pointer<ffi.Char> category,
+    ffi.Pointer<ffi.Char> logid,
+    ffi.Pointer<ffi.Char> code_location,
+    ffi.Pointer<ffi.Char> message);
+typedef DartOrtLoggingFunctionFunction = void Function(
+    ffi.Pointer<ffi.Void> param,
+    OrtLoggingLevel severity,
+    ffi.Pointer<ffi.Char> category,
+    ffi.Pointer<ffi.Char> logid,
+    ffi.Pointer<ffi.Char> code_location,
+    ffi.Pointer<ffi.Char> message);
+typedef OrtLoggingFunction
+    = ffi.Pointer<ffi.NativeFunction<OrtLoggingFunctionFunction>>;
 
 enum GraphOptimizationLevel {
   ORT_DISABLE_ALL(0),
@@ -459,134 +485,295 @@ final class OrtKernelInfo extends ffi.Opaque {}
 
 final class OrtKernelContext extends ffi.Opaque {}
 
-final class OrtCustomOp extends ffi.Struct {
-  @ffi.Uint32()
-  external int version;
+enum OrtAllocatorType {
+  OrtInvalidAllocator(-1),
+  OrtDeviceAllocator(0),
+  OrtArenaAllocator(1);
 
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Pointer<ffi.Void> Function(
-              ffi.Pointer<OrtCustomOp> op,
-              ffi.Pointer<OrtApi> api,
-              ffi.Pointer<OrtKernelInfo> info)>> CreateKernel;
+  final int value;
+  const OrtAllocatorType(this.value);
 
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Pointer<ffi.Char> Function(ffi.Pointer<OrtCustomOp> op)>> GetName;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<
-              ffi.Pointer<ffi.Char> Function(ffi.Pointer<OrtCustomOp> op)>>
-      GetExecutionProviderType;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.UnsignedInt Function(
-              ffi.Pointer<OrtCustomOp> op, ffi.Size index)>> GetInputType;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<ffi.Size Function(ffi.Pointer<OrtCustomOp> op)>>
-      GetInputTypeCount;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.UnsignedInt Function(
-              ffi.Pointer<OrtCustomOp> op, ffi.Size index)>> GetOutputType;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<ffi.Size Function(ffi.Pointer<OrtCustomOp> op)>>
-      GetOutputTypeCount;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<ffi.Void> op_kernel,
-              ffi.Pointer<OrtKernelContext> context)>> KernelCompute;
-
-  external ffi.Pointer<
-          ffi
-          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void> op_kernel)>>
-      KernelDestroy;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<
-              ffi.UnsignedInt Function(
-                  ffi.Pointer<OrtCustomOp> op, ffi.Size index)>>
-      GetInputCharacteristic;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<
-              ffi.UnsignedInt Function(
-                  ffi.Pointer<OrtCustomOp> op, ffi.Size index)>>
-      GetOutputCharacteristic;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<
-              ffi.Int Function(ffi.Pointer<OrtCustomOp> op, ffi.Size index)>>
-      GetInputMemoryType;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<ffi.Int Function(ffi.Pointer<OrtCustomOp> op)>>
-      GetVariadicInputMinArity;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<ffi.Int Function(ffi.Pointer<OrtCustomOp> op)>>
-      GetVariadicInputHomogeneity;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<ffi.Int Function(ffi.Pointer<OrtCustomOp> op)>>
-      GetVariadicOutputMinArity;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<ffi.Int Function(ffi.Pointer<OrtCustomOp> op)>>
-      GetVariadicOutputHomogeneity;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          OrtStatusPtr Function(
-              ffi.Pointer<OrtCustomOp> op,
-              ffi.Pointer<OrtApi> api,
-              ffi.Pointer<OrtKernelInfo> info,
-              ffi.Pointer<ffi.Pointer<ffi.Void>> kernel)>> CreateKernelV2;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          OrtStatusPtr Function(ffi.Pointer<ffi.Void> op_kernel,
-              ffi.Pointer<OrtKernelContext> context)>> KernelComputeV2;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<
-              OrtStatusPtr Function(
-                  ffi.Pointer<OrtCustomOp>, ffi.Pointer<OrtShapeInferContext>)>>
-      InferOutputShapeFn;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<ffi.Int Function(ffi.Pointer<OrtCustomOp> op)>>
-      GetStartVersion;
-
-  external ffi.Pointer<
-          ffi.NativeFunction<ffi.Int Function(ffi.Pointer<OrtCustomOp> op)>>
-      GetEndVersion;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Size Function(ffi.Pointer<ffi.Pointer<ffi.Int>> input_index,
-              ffi.Pointer<ffi.Pointer<ffi.Int>> output_index)>> GetMayInplace;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<ffi.Int> input_index,
-              ffi.Pointer<ffi.Int> output_index)>> ReleaseMayInplace;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Size Function(ffi.Pointer<ffi.Pointer<ffi.Int>> input_index,
-              ffi.Pointer<ffi.Pointer<ffi.Int>> output_index)>> GetAliasMap;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<ffi.Int> input_index,
-              ffi.Pointer<ffi.Int> output_index)>> ReleaseAliasMap;
+  static OrtAllocatorType fromValue(int value) => switch (value) {
+        -1 => OrtInvalidAllocator,
+        0 => OrtDeviceAllocator,
+        1 => OrtArenaAllocator,
+        _ => throw ArgumentError("Unknown value for OrtAllocatorType: $value"),
+      };
 }
+
+enum OrtMemType {
+  OrtMemTypeCPUInput(-2),
+  OrtMemTypeCPUOutput(-1),
+  OrtMemTypeDefault(0);
+
+  static const OrtMemTypeCPU = OrtMemTypeCPUOutput;
+
+  final int value;
+  const OrtMemType(this.value);
+
+  static OrtMemType fromValue(int value) => switch (value) {
+        -2 => OrtMemTypeCPUInput,
+        -1 => OrtMemTypeCPUOutput,
+        0 => OrtMemTypeDefault,
+        _ => throw ArgumentError("Unknown value for OrtMemType: $value"),
+      };
+
+  @override
+  String toString() {
+    if (this == OrtMemTypeCPUOutput)
+      return "OrtMemType.OrtMemTypeCPUOutput, OrtMemType.OrtMemTypeCPU";
+    return super.toString();
+  }
+}
+
+enum OrtCudnnConvAlgoSearch {
+  OrtCudnnConvAlgoSearchExhaustive(0),
+  OrtCudnnConvAlgoSearchHeuristic(1),
+  OrtCudnnConvAlgoSearchDefault(2);
+
+  final int value;
+  const OrtCudnnConvAlgoSearch(this.value);
+
+  static OrtCudnnConvAlgoSearch fromValue(int value) => switch (value) {
+        0 => OrtCudnnConvAlgoSearchExhaustive,
+        1 => OrtCudnnConvAlgoSearchHeuristic,
+        2 => OrtCudnnConvAlgoSearchDefault,
+        _ => throw ArgumentError(
+            "Unknown value for OrtCudnnConvAlgoSearch: $value"),
+      };
+}
+
+final class OrtCUDAProviderOptions extends ffi.Struct {
+  @ffi.Int()
+  external int device_id;
+
+  @ffi.UnsignedInt()
+  external int cudnn_conv_algo_searchAsInt;
+
+  OrtCudnnConvAlgoSearch get cudnn_conv_algo_search =>
+      OrtCudnnConvAlgoSearch.fromValue(cudnn_conv_algo_searchAsInt);
+
+  @ffi.Size()
+  external int gpu_mem_limit;
+
+  @ffi.Int()
+  external int arena_extend_strategy;
+
+  @ffi.Int()
+  external int do_copy_in_default_stream;
+
+  @ffi.Int()
+  external int has_user_compute_stream;
+
+  external ffi.Pointer<ffi.Void> user_compute_stream;
+
+  external ffi.Pointer<OrtArenaCfg> default_memory_arena_cfg;
+
+  @ffi.Int()
+  external int tunable_op_enable;
+
+  @ffi.Int()
+  external int tunable_op_tuning_enable;
+
+  @ffi.Int()
+  external int tunable_op_max_tuning_duration_ms;
+}
+
+final class OrtROCMProviderOptions extends ffi.Struct {
+  @ffi.Int()
+  external int device_id;
+
+  @ffi.Int()
+  external int miopen_conv_exhaustive_search;
+
+  @ffi.Size()
+  external int gpu_mem_limit;
+
+  @ffi.Int()
+  external int arena_extend_strategy;
+
+  @ffi.Int()
+  external int do_copy_in_default_stream;
+
+  @ffi.Int()
+  external int has_user_compute_stream;
+
+  external ffi.Pointer<ffi.Void> user_compute_stream;
+
+  external ffi.Pointer<OrtArenaCfg> default_memory_arena_cfg;
+
+  @ffi.Int()
+  external int enable_hip_graph;
+
+  @ffi.Int()
+  external int tunable_op_enable;
+
+  @ffi.Int()
+  external int tunable_op_tuning_enable;
+
+  @ffi.Int()
+  external int tunable_op_max_tuning_duration_ms;
+}
+
+final class OrtOpenVINOProviderOptions extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> device_type;
+
+  @ffi.UnsignedChar()
+  external int enable_npu_fast_compile;
+
+  external ffi.Pointer<ffi.Char> device_id;
+
+  @ffi.Size()
+  external int num_of_threads;
+
+  external ffi.Pointer<ffi.Char> cache_dir;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @ffi.UnsignedChar()
+  external int enable_opencl_throttling;
+
+  @ffi.UnsignedChar()
+  external int enable_dynamic_shapes;
+}
+
+final class OrtTensorRTProviderOptions extends ffi.Struct {
+  @ffi.Int()
+  external int device_id;
+
+  @ffi.Int()
+  external int has_user_compute_stream;
+
+  external ffi.Pointer<ffi.Void> user_compute_stream;
+
+  @ffi.Int()
+  external int trt_max_partition_iterations;
+
+  @ffi.Int()
+  external int trt_min_subgraph_size;
+
+  @ffi.Size()
+  external int trt_max_workspace_size;
+
+  @ffi.Int()
+  external int trt_fp16_enable;
+
+  @ffi.Int()
+  external int trt_int8_enable;
+
+  external ffi.Pointer<ffi.Char> trt_int8_calibration_table_name;
+
+  @ffi.Int()
+  external int trt_int8_use_native_calibration_table;
+
+  @ffi.Int()
+  external int trt_dla_enable;
+
+  @ffi.Int()
+  external int trt_dla_core;
+
+  @ffi.Int()
+  external int trt_dump_subgraphs;
+
+  @ffi.Int()
+  external int trt_engine_cache_enable;
+
+  external ffi.Pointer<ffi.Char> trt_engine_cache_path;
+
+  @ffi.Int()
+  external int trt_engine_decryption_enable;
+
+  external ffi.Pointer<ffi.Char> trt_engine_decryption_lib_path;
+
+  @ffi.Int()
+  external int trt_force_sequential_engine_build;
+}
+
+final class OrtCustomHandleType extends ffi.Struct {
+  @ffi.Char()
+  external int __place_holder;
+}
+
+typedef OrtCustomThreadHandle = ffi.Pointer<OrtCustomHandleType>;
+typedef OrtThreadWorkerFnFunction = ffi.Void Function(
+    ffi.Pointer<ffi.Void> ort_worker_fn_param);
+typedef DartOrtThreadWorkerFnFunction = void Function(
+    ffi.Pointer<ffi.Void> ort_worker_fn_param);
+typedef OrtThreadWorkerFn
+    = ffi.Pointer<ffi.NativeFunction<OrtThreadWorkerFnFunction>>;
+typedef OrtCustomCreateThreadFnFunction = OrtCustomThreadHandle Function(
+    ffi.Pointer<ffi.Void> ort_custom_thread_creation_options,
+    OrtThreadWorkerFn ort_thread_worker_fn,
+    ffi.Pointer<ffi.Void> ort_worker_fn_param);
+typedef OrtCustomCreateThreadFn
+    = ffi.Pointer<ffi.NativeFunction<OrtCustomCreateThreadFnFunction>>;
+typedef OrtCustomJoinThreadFnFunction = ffi.Void Function(
+    OrtCustomThreadHandle ort_custom_thread_handle);
+typedef DartOrtCustomJoinThreadFnFunction = void Function(
+    OrtCustomThreadHandle ort_custom_thread_handle);
+typedef OrtCustomJoinThreadFn
+    = ffi.Pointer<ffi.NativeFunction<OrtCustomJoinThreadFnFunction>>;
+
+final class OrtMIGraphXProviderOptions extends ffi.Struct {
+  @ffi.Int()
+  external int device_id;
+
+  @ffi.Int()
+  external int migraphx_fp16_enable;
+
+  @ffi.Int()
+  external int migraphx_int8_enable;
+
+  @ffi.Int()
+  external int migraphx_use_native_calibration_table;
+
+  external ffi.Pointer<ffi.Char> migraphx_int8_calibration_table_name;
+
+  @ffi.Int()
+  external int migraphx_save_compiled_model;
+
+  external ffi.Pointer<ffi.Char> migraphx_save_model_path;
+
+  @ffi.Int()
+  external int migraphx_load_compiled_model;
+
+  external ffi.Pointer<ffi.Char> migraphx_load_model_path;
+
+  @ffi.Bool()
+  external bool migraphx_exhaustive_tune;
+}
+
+final class OrtTrainingApi extends ffi.Opaque {}
+
+enum OrtMemoryInfoDeviceType {
+  OrtMemoryInfoDeviceType_CPU(0),
+  OrtMemoryInfoDeviceType_GPU(1),
+  OrtMemoryInfoDeviceType_FPGA(2);
+
+  final int value;
+  const OrtMemoryInfoDeviceType(this.value);
+
+  static OrtMemoryInfoDeviceType fromValue(int value) => switch (value) {
+        0 => OrtMemoryInfoDeviceType_CPU,
+        1 => OrtMemoryInfoDeviceType_GPU,
+        2 => OrtMemoryInfoDeviceType_FPGA,
+        _ => throw ArgumentError(
+            "Unknown value for OrtMemoryInfoDeviceType: $value"),
+      };
+}
+
+typedef RunAsyncCallbackFnFunction = ffi.Void Function(
+    ffi.Pointer<ffi.Void> user_data,
+    ffi.Pointer<ffi.Pointer<OrtValue>> outputs,
+    ffi.Size num_outputs,
+    OrtStatusPtr status);
+typedef DartRunAsyncCallbackFnFunction = void Function(
+    ffi.Pointer<ffi.Void> user_data,
+    ffi.Pointer<ffi.Pointer<OrtValue>> outputs,
+    int num_outputs,
+    OrtStatusPtr status);
+typedef RunAsyncCallbackFn
+    = ffi.Pointer<ffi.NativeFunction<RunAsyncCallbackFnFunction>>;
 
 final class OrtApi extends ffi.Struct {
   external ffi.Pointer<
@@ -2506,315 +2693,6 @@ final class OrtApi extends ffi.Struct {
               ffi.Size kv_len)>> SetEpDynamicOptions;
 }
 
-typedef OrtStatusPtr = ffi.Pointer<OrtStatus>;
-typedef OrtLoggingFunction
-    = ffi.Pointer<ffi.NativeFunction<OrtLoggingFunctionFunction>>;
-typedef OrtLoggingFunctionFunction = ffi.Void Function(
-    ffi.Pointer<ffi.Void> param,
-    ffi.UnsignedInt severity,
-    ffi.Pointer<ffi.Char> category,
-    ffi.Pointer<ffi.Char> logid,
-    ffi.Pointer<ffi.Char> code_location,
-    ffi.Pointer<ffi.Char> message);
-typedef DartOrtLoggingFunctionFunction = void Function(
-    ffi.Pointer<ffi.Void> param,
-    OrtLoggingLevel severity,
-    ffi.Pointer<ffi.Char> category,
-    ffi.Pointer<ffi.Char> logid,
-    ffi.Pointer<ffi.Char> code_location,
-    ffi.Pointer<ffi.Char> message);
-
-enum OrtAllocatorType {
-  OrtInvalidAllocator(-1),
-  OrtDeviceAllocator(0),
-  OrtArenaAllocator(1);
-
-  final int value;
-  const OrtAllocatorType(this.value);
-
-  static OrtAllocatorType fromValue(int value) => switch (value) {
-        -1 => OrtInvalidAllocator,
-        0 => OrtDeviceAllocator,
-        1 => OrtArenaAllocator,
-        _ => throw ArgumentError("Unknown value for OrtAllocatorType: $value"),
-      };
-}
-
-enum OrtMemType {
-  OrtMemTypeCPUInput(-2),
-  OrtMemTypeCPUOutput(-1),
-  OrtMemTypeDefault(0);
-
-  static const OrtMemTypeCPU = OrtMemTypeCPUOutput;
-
-  final int value;
-  const OrtMemType(this.value);
-
-  static OrtMemType fromValue(int value) => switch (value) {
-        -2 => OrtMemTypeCPUInput,
-        -1 => OrtMemTypeCPUOutput,
-        0 => OrtMemTypeDefault,
-        _ => throw ArgumentError("Unknown value for OrtMemType: $value"),
-      };
-
-  @override
-  String toString() {
-    if (this == OrtMemTypeCPUOutput)
-      return "OrtMemType.OrtMemTypeCPUOutput, OrtMemType.OrtMemTypeCPU";
-    return super.toString();
-  }
-}
-
-final class OrtCUDAProviderOptions extends ffi.Struct {
-  @ffi.Int()
-  external int device_id;
-
-  @ffi.UnsignedInt()
-  external int cudnn_conv_algo_searchAsInt;
-
-  OrtCudnnConvAlgoSearch get cudnn_conv_algo_search =>
-      OrtCudnnConvAlgoSearch.fromValue(cudnn_conv_algo_searchAsInt);
-
-  @ffi.Size()
-  external int gpu_mem_limit;
-
-  @ffi.Int()
-  external int arena_extend_strategy;
-
-  @ffi.Int()
-  external int do_copy_in_default_stream;
-
-  @ffi.Int()
-  external int has_user_compute_stream;
-
-  external ffi.Pointer<ffi.Void> user_compute_stream;
-
-  external ffi.Pointer<OrtArenaCfg> default_memory_arena_cfg;
-
-  @ffi.Int()
-  external int tunable_op_enable;
-
-  @ffi.Int()
-  external int tunable_op_tuning_enable;
-
-  @ffi.Int()
-  external int tunable_op_max_tuning_duration_ms;
-}
-
-enum OrtCudnnConvAlgoSearch {
-  OrtCudnnConvAlgoSearchExhaustive(0),
-  OrtCudnnConvAlgoSearchHeuristic(1),
-  OrtCudnnConvAlgoSearchDefault(2);
-
-  final int value;
-  const OrtCudnnConvAlgoSearch(this.value);
-
-  static OrtCudnnConvAlgoSearch fromValue(int value) => switch (value) {
-        0 => OrtCudnnConvAlgoSearchExhaustive,
-        1 => OrtCudnnConvAlgoSearchHeuristic,
-        2 => OrtCudnnConvAlgoSearchDefault,
-        _ => throw ArgumentError(
-            "Unknown value for OrtCudnnConvAlgoSearch: $value"),
-      };
-}
-
-final class OrtROCMProviderOptions extends ffi.Struct {
-  @ffi.Int()
-  external int device_id;
-
-  @ffi.Int()
-  external int miopen_conv_exhaustive_search;
-
-  @ffi.Size()
-  external int gpu_mem_limit;
-
-  @ffi.Int()
-  external int arena_extend_strategy;
-
-  @ffi.Int()
-  external int do_copy_in_default_stream;
-
-  @ffi.Int()
-  external int has_user_compute_stream;
-
-  external ffi.Pointer<ffi.Void> user_compute_stream;
-
-  external ffi.Pointer<OrtArenaCfg> default_memory_arena_cfg;
-
-  @ffi.Int()
-  external int enable_hip_graph;
-
-  @ffi.Int()
-  external int tunable_op_enable;
-
-  @ffi.Int()
-  external int tunable_op_tuning_enable;
-
-  @ffi.Int()
-  external int tunable_op_max_tuning_duration_ms;
-}
-
-final class OrtOpenVINOProviderOptions extends ffi.Struct {
-  external ffi.Pointer<ffi.Char> device_type;
-
-  @ffi.UnsignedChar()
-  external int enable_npu_fast_compile;
-
-  external ffi.Pointer<ffi.Char> device_id;
-
-  @ffi.Size()
-  external int num_of_threads;
-
-  external ffi.Pointer<ffi.Char> cache_dir;
-
-  external ffi.Pointer<ffi.Void> context;
-
-  @ffi.UnsignedChar()
-  external int enable_opencl_throttling;
-
-  @ffi.UnsignedChar()
-  external int enable_dynamic_shapes;
-}
-
-final class OrtTensorRTProviderOptions extends ffi.Struct {
-  @ffi.Int()
-  external int device_id;
-
-  @ffi.Int()
-  external int has_user_compute_stream;
-
-  external ffi.Pointer<ffi.Void> user_compute_stream;
-
-  @ffi.Int()
-  external int trt_max_partition_iterations;
-
-  @ffi.Int()
-  external int trt_min_subgraph_size;
-
-  @ffi.Size()
-  external int trt_max_workspace_size;
-
-  @ffi.Int()
-  external int trt_fp16_enable;
-
-  @ffi.Int()
-  external int trt_int8_enable;
-
-  external ffi.Pointer<ffi.Char> trt_int8_calibration_table_name;
-
-  @ffi.Int()
-  external int trt_int8_use_native_calibration_table;
-
-  @ffi.Int()
-  external int trt_dla_enable;
-
-  @ffi.Int()
-  external int trt_dla_core;
-
-  @ffi.Int()
-  external int trt_dump_subgraphs;
-
-  @ffi.Int()
-  external int trt_engine_cache_enable;
-
-  external ffi.Pointer<ffi.Char> trt_engine_cache_path;
-
-  @ffi.Int()
-  external int trt_engine_decryption_enable;
-
-  external ffi.Pointer<ffi.Char> trt_engine_decryption_lib_path;
-
-  @ffi.Int()
-  external int trt_force_sequential_engine_build;
-}
-
-typedef OrtCustomCreateThreadFn
-    = ffi.Pointer<ffi.NativeFunction<OrtCustomCreateThreadFnFunction>>;
-typedef OrtCustomCreateThreadFnFunction = OrtCustomThreadHandle Function(
-    ffi.Pointer<ffi.Void> ort_custom_thread_creation_options,
-    OrtThreadWorkerFn ort_thread_worker_fn,
-    ffi.Pointer<ffi.Void> ort_worker_fn_param);
-typedef OrtCustomThreadHandle = ffi.Pointer<OrtCustomHandleType>;
-
-final class OrtCustomHandleType extends ffi.Struct {
-  @ffi.Char()
-  external int __place_holder;
-}
-
-typedef OrtThreadWorkerFn
-    = ffi.Pointer<ffi.NativeFunction<OrtThreadWorkerFnFunction>>;
-typedef OrtThreadWorkerFnFunction = ffi.Void Function(
-    ffi.Pointer<ffi.Void> ort_worker_fn_param);
-typedef DartOrtThreadWorkerFnFunction = void Function(
-    ffi.Pointer<ffi.Void> ort_worker_fn_param);
-typedef OrtCustomJoinThreadFn
-    = ffi.Pointer<ffi.NativeFunction<OrtCustomJoinThreadFnFunction>>;
-typedef OrtCustomJoinThreadFnFunction = ffi.Void Function(
-    OrtCustomThreadHandle ort_custom_thread_handle);
-typedef DartOrtCustomJoinThreadFnFunction = void Function(
-    OrtCustomThreadHandle ort_custom_thread_handle);
-
-final class OrtMIGraphXProviderOptions extends ffi.Struct {
-  @ffi.Int()
-  external int device_id;
-
-  @ffi.Int()
-  external int migraphx_fp16_enable;
-
-  @ffi.Int()
-  external int migraphx_int8_enable;
-
-  @ffi.Int()
-  external int migraphx_use_native_calibration_table;
-
-  external ffi.Pointer<ffi.Char> migraphx_int8_calibration_table_name;
-
-  @ffi.Int()
-  external int migraphx_save_compiled_model;
-
-  external ffi.Pointer<ffi.Char> migraphx_save_model_path;
-
-  @ffi.Int()
-  external int migraphx_load_compiled_model;
-
-  external ffi.Pointer<ffi.Char> migraphx_load_model_path;
-
-  @ffi.Bool()
-  external bool migraphx_exhaustive_tune;
-}
-
-final class OrtTrainingApi extends ffi.Opaque {}
-
-enum OrtMemoryInfoDeviceType {
-  OrtMemoryInfoDeviceType_CPU(0),
-  OrtMemoryInfoDeviceType_GPU(1),
-  OrtMemoryInfoDeviceType_FPGA(2);
-
-  final int value;
-  const OrtMemoryInfoDeviceType(this.value);
-
-  static OrtMemoryInfoDeviceType fromValue(int value) => switch (value) {
-        0 => OrtMemoryInfoDeviceType_CPU,
-        1 => OrtMemoryInfoDeviceType_GPU,
-        2 => OrtMemoryInfoDeviceType_FPGA,
-        _ => throw ArgumentError(
-            "Unknown value for OrtMemoryInfoDeviceType: $value"),
-      };
-}
-
-typedef RunAsyncCallbackFn
-    = ffi.Pointer<ffi.NativeFunction<RunAsyncCallbackFnFunction>>;
-typedef RunAsyncCallbackFnFunction = ffi.Void Function(
-    ffi.Pointer<ffi.Void> user_data,
-    ffi.Pointer<ffi.Pointer<OrtValue>> outputs,
-    ffi.Size num_outputs,
-    OrtStatusPtr status);
-typedef DartRunAsyncCallbackFnFunction = void Function(
-    ffi.Pointer<ffi.Void> user_data,
-    ffi.Pointer<ffi.Pointer<OrtValue>> outputs,
-    int num_outputs,
-    OrtStatusPtr status);
-
 enum OrtCustomOpInputOutputCharacteristic {
   INPUT_OUTPUT_REQUIRED(0),
   INPUT_OUTPUT_OPTIONAL(1),
@@ -2833,6 +2711,135 @@ enum OrtCustomOpInputOutputCharacteristic {
       };
 }
 
+final class OrtCustomOp extends ffi.Struct {
+  @ffi.Uint32()
+  external int version;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(
+              ffi.Pointer<OrtCustomOp> op,
+              ffi.Pointer<OrtApi> api,
+              ffi.Pointer<OrtKernelInfo> info)>> CreateKernel;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(ffi.Pointer<OrtCustomOp> op)>> GetName;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.Pointer<ffi.Char> Function(ffi.Pointer<OrtCustomOp> op)>>
+      GetExecutionProviderType;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.UnsignedInt Function(
+              ffi.Pointer<OrtCustomOp> op, ffi.Size index)>> GetInputType;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Size Function(ffi.Pointer<OrtCustomOp> op)>>
+      GetInputTypeCount;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.UnsignedInt Function(
+              ffi.Pointer<OrtCustomOp> op, ffi.Size index)>> GetOutputType;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Size Function(ffi.Pointer<OrtCustomOp> op)>>
+      GetOutputTypeCount;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Void> op_kernel,
+              ffi.Pointer<OrtKernelContext> context)>> KernelCompute;
+
+  external ffi.Pointer<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void> op_kernel)>>
+      KernelDestroy;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.UnsignedInt Function(
+                  ffi.Pointer<OrtCustomOp> op, ffi.Size index)>>
+      GetInputCharacteristic;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.UnsignedInt Function(
+                  ffi.Pointer<OrtCustomOp> op, ffi.Size index)>>
+      GetOutputCharacteristic;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.Int Function(ffi.Pointer<OrtCustomOp> op, ffi.Size index)>>
+      GetInputMemoryType;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Int Function(ffi.Pointer<OrtCustomOp> op)>>
+      GetVariadicInputMinArity;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Int Function(ffi.Pointer<OrtCustomOp> op)>>
+      GetVariadicInputHomogeneity;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Int Function(ffi.Pointer<OrtCustomOp> op)>>
+      GetVariadicOutputMinArity;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Int Function(ffi.Pointer<OrtCustomOp> op)>>
+      GetVariadicOutputHomogeneity;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          OrtStatusPtr Function(
+              ffi.Pointer<OrtCustomOp> op,
+              ffi.Pointer<OrtApi> api,
+              ffi.Pointer<OrtKernelInfo> info,
+              ffi.Pointer<ffi.Pointer<ffi.Void>> kernel)>> CreateKernelV2;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          OrtStatusPtr Function(ffi.Pointer<ffi.Void> op_kernel,
+              ffi.Pointer<OrtKernelContext> context)>> KernelComputeV2;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<
+              OrtStatusPtr Function(
+                  ffi.Pointer<OrtCustomOp>, ffi.Pointer<OrtShapeInferContext>)>>
+      InferOutputShapeFn;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Int Function(ffi.Pointer<OrtCustomOp> op)>>
+      GetStartVersion;
+
+  external ffi.Pointer<
+          ffi.NativeFunction<ffi.Int Function(ffi.Pointer<OrtCustomOp> op)>>
+      GetEndVersion;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ffi.Pointer<ffi.Int>> input_index,
+              ffi.Pointer<ffi.Pointer<ffi.Int>> output_index)>> GetMayInplace;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Int> input_index,
+              ffi.Pointer<ffi.Int> output_index)>> ReleaseMayInplace;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ffi.Pointer<ffi.Int>> input_index,
+              ffi.Pointer<ffi.Pointer<ffi.Int>> output_index)>> GetAliasMap;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Int> input_index,
+              ffi.Pointer<ffi.Int> output_index)>> ReleaseAliasMap;
+}
+
 final class OrtApiBase extends ffi.Struct {
   external ffi.Pointer<
           ffi.NativeFunction<ffi.Pointer<OrtApi> Function(ffi.Uint32 version)>>
@@ -2842,7 +2849,12 @@ final class OrtApiBase extends ffi.Struct {
       GetVersionString;
 }
 
+typedef RegisterCustomOpsFnFunction = ffi.Pointer<OrtStatus> Function(
+    ffi.Pointer<OrtSessionOptions> options, ffi.Pointer<OrtApiBase> api);
+typedef RegisterCustomOpsFn
+    = ffi.Pointer<ffi.NativeFunction<RegisterCustomOpsFnFunction>>;
+
 const int ORT_API_VERSION = 21;
 
 const String ORT_FILE =
-    '/var/folders/99/mn807nx10mzcwl9zdwpgyw940000gn/T/sIMrHj/temp_for_macros.hpp';
+    '/var/folders/99/mn807nx10mzcwl9zdwpgyw940000gn/T/tksq85/temp_for_macros.hpp';

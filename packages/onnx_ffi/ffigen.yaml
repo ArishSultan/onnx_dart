@@ -1,7 +1,11 @@
-name: OrtFFI
+name: OrtBindings
 description: Bindings for onnxruntime c api
 
 output: 'lib/ffigen/bindings.dart'
+
+# Silencing the warning temporarily since the enums can not be ignored and the generated code is not that unsafe.
+# P.S. might remove this in future
+silence-enum-warning: true
 
 headers:
   entry-points:
@@ -9,5 +13,10 @@ headers:
 
   include-directives:
     - '**/core/**'
+
+functions:
+  leaf:
+    include:
+      - '.*'
 
 comments: false
