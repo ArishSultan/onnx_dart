@@ -1,11 +1,16 @@
 import 'package:onnx_ffi/onnx_ffigen.dart';
+import 'package:onnx_ffi/src/runtime.dart';
+import 'package:onnx_ffi/src/session/session.dart';
+import 'package:onnx_ffi/src/session/session_options.dart';
 
 void main() {
-  // OnnxRuntime.initialize(
-  //   '/Users/arish/Downloads/onnxruntime-osx-arm64-1.20.0/lib/libonnxruntime.1.20.0.dylib',
-  // );
-  //
-  // print(OnnxRuntime.version);
-  // print(OnnxRuntime.apiVersion);
+  Session session = Session(
+    // '/Users/arish/Workspace/Professional/EmailAnalyzer/email_analyzer/assets/models/detection.onnx',
+    '/Users/arish/Downloads/arcfaceresnet100-11-int8.onnx',
+    SessionOptions(),
+  );
+
+  print(session.modelMetadata);
 }
+
 // libonnxruntime.1.20.0.dylib

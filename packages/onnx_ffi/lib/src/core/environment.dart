@@ -1,22 +1,26 @@
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
-import 'package:onnx_platform_interface/onnx_platform_interface.dart';
+import 'package:onnx_platform_interface/onnx_platform_interface.dart'
+    show LoggingLevel;
 
 import 'status.dart';
 
-import '../../onnx_ffigen.dart';
+import '../runtime.dart';
+import '../resource.dart';
 
-import '../../ffigen/typedefs.dart';
 import '../../ffigen/bindings.dart';
+import '../../ffigen/extensions.dart';
 
 final class Environment extends Resource<OrtEnv> {
-  // Finalizer hook for garbage collection.
-  static final _finalizer = Finalizer(
-    OnnxRuntime.instance.api.ReleaseEnv.asFunction<ReleaseEnv>(isLeaf: true),
-  );
+  const Environment._(
+    super.reference, {
+    required this.logId,
+    required this.loggingLevel,
+  });
 
-  const Environment._(super.reference);
+  final String logId;
+  final LoggingLevel loggingLevel;
 
   factory Environment({
     String logId = 'DartOnnxFFI',
@@ -25,7 +29,7 @@ final class Environment extends Resource<OrtEnv> {
     final pointer = calloc<Pointer<OrtEnv>>();
 
     checkOrtStatus(
-      OnnxRuntime.instance.api.CreateEnv.asFunction<CreateEnv>(isLeaf: true)(
+      OnnxRuntime.api.createEnv(
         switch (loggingLevel) {
           LoggingLevel.verbose => 0,
           LoggingLevel.info => 1,
@@ -38,6 +42,17 @@ final class Environment extends Resource<OrtEnv> {
       ),
     );
 
-    return Environment._(pointer.value).withFinalizer(_finalizer);
+    return Environment._(
+      pointer.value,
+      logId: logId,
+      loggingLevel: loggingLevel,
+    ).withFinalizer(_finalizer);
   }
+
+  @override
+  String toString() {
+    return 'Environment(logId: \'$logId\', loggingLevel: $loggingLevel)';
+  }
+
+  static final _finalizer = NativeFinalizer(OnnxRuntime.api.ReleaseEnv.cast());
 }

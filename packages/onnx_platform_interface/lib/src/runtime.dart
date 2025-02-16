@@ -1,3 +1,5 @@
-base class OnnxRuntime {
+abstract interface class OnnxRuntime {
+  String get version;
 
+// Environment get environment;
 }

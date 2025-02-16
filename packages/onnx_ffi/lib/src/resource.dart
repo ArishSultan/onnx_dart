@@ -1,4 +1,4 @@
-part of '../onnx_ffigen.dart';
+import 'dart:ffi';
 
 ///
 base class Resource<T extends NativeType> implements Finalizable {
@@ -10,9 +10,9 @@ base class Resource<T extends NativeType> implements Finalizable {
 
   ///
   V withFinalizer<U extends NativeType, V extends Resource<U>>(
-    Finalizer<Pointer<T>> finalizer,
+    NativeFinalizer finalizer,
   ) {
-    finalizer.attach(this, ref);
+    finalizer.attach(this, ref.cast(), detach: this);
 
     return this as V;
   }

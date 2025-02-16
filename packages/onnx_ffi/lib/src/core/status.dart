@@ -1,28 +1,22 @@
 import 'dart:ffi';
 
-import 'package:ffi/ffi.dart';
-
-import '../../onnx_ffigen.dart';
+import 'cache.dart';
 
 import '../../ffigen/bindings.dart';
-import '../../ffigen/typedefs.dart';
 
 void checkOrtStatus(Pointer<OrtStatus> status) {
-  final code = OnnxRuntime.instance.api.GetErrorCode.asFunction<GetStatusCode>(
-    isLeaf: true,
-  )(status);
-
-  final message =
-      OnnxRuntime.instance.api.GetErrorMessage
-          .asFunction<GetStatusMessage>(isLeaf: true)(status)
-          .cast<Utf8>()
-          .toDartString;
-
-  // Success case
-  if (code == 0) {
+  if (status == nullptr) {
+    // There is no status, call is marked as success.
     return;
   }
 
-  // TODO: Throw proper error as defined in platform interface.
-  print('OrtStatus: $code => $message');
+  final code = $getStatusCodeFn(status);
+  final message = $getStatusMessageFn(status);
+
+  if (code == 0) {
+    // The function call is success.
+    return;
+  }
+
+  print('code: $code, message: $message');
 }
