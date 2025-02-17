@@ -23,7 +23,7 @@ final class ModelMetadata extends Resource<OrtModelMetadata>
   factory ModelMetadata.fromSession(Session session) {
     final pointer = calloc<Pointer<OrtModelMetadata>>();
     checkOrtStatus(
-      OnnxRuntime.api.sessionGetModelMetadata(session.ref, pointer),
+      OnnxRuntime.$.api.sessionGetModelMetadata(session.ref, pointer),
     );
 
     return ModelMetadata._(pointer.$value).withFinalizer(_finalizer);
@@ -33,7 +33,7 @@ final class ModelMetadata extends Resource<OrtModelMetadata>
   int get version {
     if (_version == null) {
       final pointer = calloc<Int64>();
-      checkOrtStatus(OnnxRuntime.api.modelMetadataGetVersion(ref, pointer));
+      checkOrtStatus(OnnxRuntime.$.api.modelMetadataGetVersion(ref, pointer));
 
       _version = pointer.value;
       calloc.free(pointer);
@@ -44,24 +44,24 @@ final class ModelMetadata extends Resource<OrtModelMetadata>
 
   @override
   String get domain =>
-      _domain ??= _getStringProperty(OnnxRuntime.api.modelMetadataGetDomain);
+      _domain ??= _getStringProperty(OnnxRuntime.$.api.modelMetadataGetDomain);
 
   @override
   String get producer =>
       _producer ??= _getStringProperty(
-        OnnxRuntime.api.modelMetadataGetProducerName,
+        OnnxRuntime.$.api.modelMetadataGetProducerName,
       );
 
   @override
   String get graphName =>
       _graphName ??= _getStringProperty(
-        OnnxRuntime.api.modelMetadataGetGraphName,
+        OnnxRuntime.$.api.modelMetadataGetGraphName,
       );
 
   @override
   String get graphDescription =>
       _graphDescription ??= _getStringProperty(
-        OnnxRuntime.api.modelMetadataGetGraphDescription,
+        OnnxRuntime.$.api.modelMetadataGetGraphDescription,
       );
 
   @override
@@ -73,7 +73,7 @@ final class ModelMetadata extends Resource<OrtModelMetadata>
       final keysArrayPtr = calloc<Pointer<Pointer<Char>>>();
 
       checkOrtStatus(
-        OnnxRuntime.api.modelMetadataGetCustomMetadataMapKeys(
+        OnnxRuntime.$.api.modelMetadataGetCustomMetadataMapKeys(
           ref,
           allocatorPtr,
           keysArrayPtr,
@@ -89,7 +89,7 @@ final class ModelMetadata extends Resource<OrtModelMetadata>
         final keyPtr = keysArray[i];
         final valuePtr = calloc<Pointer<Char>>();
 
-        OnnxRuntime.api.modelMetadataLookupCustomMetadataMap(
+        OnnxRuntime.$.api.modelMetadataLookupCustomMetadataMap(
           ref,
           allocatorPtr,
           keyPtr,
@@ -137,6 +137,6 @@ final class ModelMetadata extends Resource<OrtModelMetadata>
   Map<String, String>? _extraProperties;
 
   static final _finalizer = NativeFinalizer(
-    OnnxRuntime.api.ReleaseModelMetadata.cast(),
+    OnnxRuntime.$.api.ReleaseModelMetadata.cast(),
   );
 }

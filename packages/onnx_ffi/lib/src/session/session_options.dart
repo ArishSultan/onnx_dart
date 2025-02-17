@@ -15,12 +15,12 @@ final class SessionOptions extends Resource<OrtSessionOptions> {
 
   factory SessionOptions() {
     final pointer = calloc<Pointer<OrtSessionOptions>>();
-    checkOrtStatus(OnnxRuntime.api.createSessionOptions(pointer));
+    checkOrtStatus(OnnxRuntime.$.api.createSessionOptions(pointer));
 
     return SessionOptions._(pointer.$value).withFinalizer(_finalizer);
   }
 
   static final _finalizer = NativeFinalizer(
-    OnnxRuntime.api.ReleaseSessionOptions.cast(),
+    OnnxRuntime.$.api.ReleaseSessionOptions.cast(),
   );
 }

@@ -18,14 +18,32 @@ extension TypedExtensionOrtApi on OrtApi {
   CreateSessionFromArray get createSessionFromArray =>
       this.CreateSessionFromArray.asFunction(isLeaf: true);
 
+  SessionGetModelMetadata get sessionGetModelMetadata =>
+      this.SessionGetModelMetadata.asFunction(isLeaf: true);
+
+  SessionGetModelIOCount get sessionGetInputCount =>
+      this.SessionGetInputCount.asFunction(isLeaf: true);
+
+  SessionGetModelIOName get sessionGetInputName =>
+      this.SessionGetInputName.asFunction(isLeaf: true);
+
+  SessionGetModelIoTypeInfo get sessionGetInputTypeInfo =>
+      this.SessionGetInputTypeInfo.asFunction(isLeaf: true);
+
+  SessionGetModelIOCount get sessionGetOutputCount =>
+      this.SessionGetOutputCount.asFunction(isLeaf: true);
+
+  SessionGetModelIOName get sessionGetOutputName =>
+      this.SessionGetOutputName.asFunction(isLeaf: true);
+
+  SessionGetModelIoTypeInfo get sessionGetOutputTypeInfo =>
+      this.SessionGetOutputTypeInfo.asFunction(isLeaf: true);
+
   // [OrtSessionOptions] methods
   CreateSessionOptions get createSessionOptions =>
       this.CreateSessionOptions.asFunction(isLeaf: true);
 
   // [OrtModelMetadata] Methods
-  SessionGetModelMetadata get sessionGetModelMetadata =>
-      this.SessionGetModelMetadata.asFunction(isLeaf: true);
-
   ModelMetadataGetVersion get modelMetadataGetVersion =>
       this.ModelMetadataGetVersion.asFunction(isLeaf: true);
 

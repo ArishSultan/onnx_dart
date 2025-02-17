@@ -47,6 +47,22 @@ typedef SessionGetModelMetadata =
       Pointer<OrtSession> session,
       Pointer<Pointer<OrtModelMetadata>> ref,
     );
+typedef SessionGetModelIOCount =
+    Pointer<OrtStatus> Function(Pointer<OrtSession> session, Pointer<Size> ref);
+
+typedef SessionGetModelIOName =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtSession> session,
+      int index,
+      Pointer<OrtAllocator> allocator,
+      Pointer<Pointer<Char>> ref,
+    );
+typedef SessionGetModelIoTypeInfo =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtSession> session,
+      int index,
+      Pointer<Pointer<OrtTypeInfo>> typeInfo,
+    );
 
 // [OrtSessionOptions] Methods
 typedef ReleaseSessionOptions = void Function(Pointer<OrtSessionOptions> ref);

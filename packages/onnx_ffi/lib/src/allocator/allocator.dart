@@ -16,7 +16,7 @@ final class Allocator extends Resource<OrtAllocator> {
   factory Allocator.withDefaultOptions() {
     if (_defaultAllocator == null) {
       final pointer = calloc<Pointer<OrtAllocator>>();
-      checkOrtStatus(OnnxRuntime.api.getAllocatorWithDefaultOptions(pointer));
+      checkOrtStatus(OnnxRuntime.$.api.getAllocatorWithDefaultOptions(pointer));
 
       _defaultAllocator = Allocator._(pointer.$value);
     }
@@ -27,6 +27,6 @@ final class Allocator extends Resource<OrtAllocator> {
   static Allocator? _defaultAllocator;
 
   static final _finalizer = NativeFinalizer(
-    OnnxRuntime.api.ReleaseAllocator.cast(),
+    OnnxRuntime.$.api.ReleaseAllocator.cast(),
   );
 }

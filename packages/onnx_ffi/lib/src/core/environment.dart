@@ -1,8 +1,7 @@
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
-import 'package:onnx_platform_interface/onnx_platform_interface.dart'
-    show LoggingLevel;
+import 'package:onnx_platform_interface/onnx_platform_interface.dart' as base;
 
 import 'status.dart';
 
@@ -12,7 +11,7 @@ import '../resource.dart';
 import '../../ffigen/bindings.dart';
 import '../../ffigen/extensions.dart';
 
-final class Environment extends Resource<OrtEnv> {
+final class Environment extends Resource<OrtEnv> with base.Environment {
   const Environment._(
     super.reference, {
     required this.logId,
@@ -20,22 +19,22 @@ final class Environment extends Resource<OrtEnv> {
   });
 
   final String logId;
-  final LoggingLevel loggingLevel;
+  final base.LoggingLevel loggingLevel;
 
   factory Environment({
     String logId = 'DartOnnxFFI',
-    LoggingLevel loggingLevel = LoggingLevel.error,
+    base.LoggingLevel loggingLevel = base.LoggingLevel.error,
   }) {
     final pointer = calloc<Pointer<OrtEnv>>();
 
     checkOrtStatus(
-      OnnxRuntime.api.createEnv(
+      OnnxRuntime.$.api.createEnv(
         switch (loggingLevel) {
-          LoggingLevel.verbose => 0,
-          LoggingLevel.info => 1,
-          LoggingLevel.warning => 2,
-          LoggingLevel.error => 3,
-          LoggingLevel.fatal => 4,
+          base.LoggingLevel.verbose => 0,
+          base.LoggingLevel.info => 1,
+          base.LoggingLevel.warning => 2,
+          base.LoggingLevel.error => 3,
+          base.LoggingLevel.fatal => 4,
         },
         logId.toNativeUtf8().cast(),
         pointer,
@@ -54,5 +53,7 @@ final class Environment extends Resource<OrtEnv> {
     return 'Environment(logId: \'$logId\', loggingLevel: $loggingLevel)';
   }
 
-  static final _finalizer = NativeFinalizer(OnnxRuntime.api.ReleaseEnv.cast());
+  static final _finalizer = NativeFinalizer(
+    OnnxRuntime.$.api.ReleaseEnv.cast(),
+  );
 }

@@ -1,5 +1,12 @@
-abstract interface class OnnxRuntime {
+import 'environment.dart';
+
+abstract mixin class OnnxRuntime {
   String get version;
 
-// Environment get environment;
+  Environment get defaultEnv;
+
+  @override
+  String toString() {
+    return 'OnnxRuntime(version: $version, environment: $defaultEnv)';
+  }
 }

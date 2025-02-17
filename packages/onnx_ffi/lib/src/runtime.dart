@@ -9,11 +9,6 @@ import '../ffigen/bindings.dart';
 import '../ffigen/typedefs.dart';
 
 final class OnnxRuntime implements base.OnnxRuntime {
-  static final instance = OnnxRuntime._();
-
-  static late final OrtApi api;
-  static late final OrtApiBase apiBase;
-
   OnnxRuntime._() {
     final bindings = OrtBindings(
       DynamicLibrary.open(
@@ -21,14 +16,16 @@ final class OnnxRuntime implements base.OnnxRuntime {
       ),
     );
 
+    final apiVersion = ORT_API_VERSION - 1;
+
     apiBase = bindings.OrtGetApiBase().ref;
-    api =
-        apiBase.GetApi.asFunction<GetApi>(isLeaf: true)(
-          ORT_API_VERSION - 1,
-        ).ref;
+    api = apiBase.GetApi.asFunction<GetApi>(isLeaf: true)(apiVersion).ref;
   }
 
-  String? _version;
+  late final OrtApi api;
+  late final OrtApiBase apiBase;
+
+  static final $ = OnnxRuntime._();
 
   String get version {
     return _version ??=
@@ -37,9 +34,11 @@ final class OnnxRuntime implements base.OnnxRuntime {
         )().cast<Utf8>().toDartString();
   }
 
-  Environment? _defaultEnv;
-
   Environment get defaultEnv {
     return _defaultEnv ??= Environment(loggingLevel: base.LoggingLevel.verbose);
   }
+
+  // cache variables
+  String? _version;
+  Environment? _defaultEnv;
 }

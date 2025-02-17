@@ -10,7 +10,9 @@ void main() {
     SessionOptions(),
   );
 
-  print(session.modelMetadata);
+  print(session.inputs);
+  print(session.inputs);
+  print(session.outputs);
 }
 
 // libonnxruntime.1.20.0.dylib
