@@ -2,6 +2,7 @@ import 'dart:ffi';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
+import 'package:onnx_ffi/src/core/type_info.dart';
 
 import 'model_metadata.dart';
 import 'session_options.dart';
@@ -37,7 +38,7 @@ final class Session extends Resource<OrtSession> {
       ),
     );
 
-    return Session._(pointer.$value).withFinalizer(_finalizer);
+    return Session._(pointer.$value);
   }
 
   factory Session.fromBytes(
@@ -61,9 +62,9 @@ final class Session extends Resource<OrtSession> {
       ),
     );
 
-    calloc.free(modelBufferPtr);
+    // calloc.free(modelBufferPtr);
 
-    return Session._(pointer.$value).withFinalizer(_finalizer);
+    return Session._(pointer.$value);
   }
 
   ModelMetadata get modelMetadata {
@@ -81,9 +82,7 @@ final class Session extends Resource<OrtSession> {
         inputs,
       );
 
-      return inputs;
-
-      // _inputs = inputs;
+      _inputs = inputs;
     }
 
     return _inputs!;
@@ -126,21 +125,14 @@ final class Session extends Resource<OrtSession> {
     final allocatorPtr = allocator.Allocator.withDefaultOptions().ref;
     for (var i = 0; i < ioCount; ++i) {
       final namePtr = calloc<Pointer<Char>>();
+      final typeInfoPtr = calloc<Pointer<OrtTypeInfo>>();
+
       nameFn(ref, i, allocatorPtr, namePtr);
+      typeInfoFn(ref, i, typeInfoPtr);
 
-      // final typeInfoPtr = calloc<Pointer<OrtTypeInfo>>();
-      // typeInfoFn(ref, i, typeInfoPtr);
-
-      final strPtr = namePtr.$value;
-      // final typeInfo = typeInfoPtr.$value;
-
-      outputRef[strPtr.cast<Utf8>().toDartString()] = null;
-
-      calloc.free(strPtr);
+      outputRef[stringFromPtrOnnxAllocated(namePtr.$value)] = resolveTypeInfo(
+        typeInfoPtr.$value,
+      );
     }
   }
-
-  static final _finalizer = NativeFinalizer(
-    OnnxRuntime.$.api.ReleaseSession.cast(),
-  );
 }

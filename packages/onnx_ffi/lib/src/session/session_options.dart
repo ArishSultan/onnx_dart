@@ -11,16 +11,12 @@ import '../../ffigen/bindings.dart';
 import '../../ffigen/extensions.dart';
 
 final class SessionOptions extends Resource<OrtSessionOptions> {
-  const SessionOptions._(super.reference);
+  SessionOptions._(super.reference);
 
   factory SessionOptions() {
     final pointer = calloc<Pointer<OrtSessionOptions>>();
     checkOrtStatus(OnnxRuntime.$.api.createSessionOptions(pointer));
 
-    return SessionOptions._(pointer.$value).withFinalizer(_finalizer);
+    return SessionOptions._(pointer.$value);
   }
-
-  static final _finalizer = NativeFinalizer(
-    OnnxRuntime.$.api.ReleaseSessionOptions.cast(),
-  );
 }

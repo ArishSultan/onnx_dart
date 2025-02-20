@@ -26,7 +26,7 @@ final class ModelMetadata extends Resource<OrtModelMetadata>
       OnnxRuntime.$.api.sessionGetModelMetadata(session.ref, pointer),
     );
 
-    return ModelMetadata._(pointer.$value).withFinalizer(_finalizer);
+    return ModelMetadata._(pointer.$value);
   }
 
   @override

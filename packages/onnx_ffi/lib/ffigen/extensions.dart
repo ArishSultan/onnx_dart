@@ -11,6 +11,9 @@ extension TypedExtensionOrtApi on OrtApi {
   GetAllocatorWithDefaultOptions get getAllocatorWithDefaultOptions =>
       this.GetAllocatorWithDefaultOptions.asFunction(isLeaf: true);
 
+  AllocatorFree get allocatorFree =>
+      this.AllocatorFree.asFunction(isLeaf: true);
+
   // [OrtSession] Methods
   CreateSession get createSession =>
       this.CreateSession.asFunction(isLeaf: true);
@@ -66,4 +69,39 @@ extension TypedExtensionOrtApi on OrtApi {
   ModelMetadataLookupCustomMetadataMap
   get modelMetadataLookupCustomMetadataMap =>
       this.ModelMetadataLookupCustomMetadataMap.asFunction(isLeaf: true);
+
+  // [OrtTypeInfo] Methods
+  ReleaseTypeInfo get releaseTypeInfo =>
+      this.ReleaseTypeInfo.asFunction(isLeaf: true);
+
+  GetOnnxTypeFromTypeInfo get getOnnxTypeFromTypeInfo =>
+      this.GetOnnxTypeFromTypeInfo.asFunction(isLeaf: true);
+
+  CastTypeInfoToTensorInfo get castTypeInfoToTensorInfo =>
+      this.CastTypeInfoToTensorInfo.asFunction(isLeaf: true);
+
+  // [OrtTensorTypeAndShapeInfo] Methods
+  CreateTensorTypeAndShapeInfo get createTensorTypeAndShapeInfo =>
+      this.CreateTensorTypeAndShapeInfo.asFunction(isLeaf: true);
+
+  SetTensorElementType get setTensorElementType =>
+      this.SetTensorElementType.asFunction(isLeaf: true);
+
+  SetDimensions get setDimensions =>
+      this.SetDimensions.asFunction(isLeaf: true);
+
+  GetTensorElementType get getTensorElementType =>
+      this.GetTensorElementType.asFunction(isLeaf: true);
+
+  GetDimensionsCount get getDimensionsCount =>
+      this.GetDimensionsCount.asFunction(isLeaf: true);
+
+  GetDimensions get getDimensions =>
+      this.GetDimensions.asFunction(isLeaf: true);
+
+  GetSymbolicDimensions get getSymbolicDimensions =>
+      this.GetSymbolicDimensions.asFunction(isLeaf: true);
+
+  GetTensorShapeElementCount get getTensorShapeElementCount =>
+      this.GetTensorShapeElementCount.asFunction(isLeaf: true);
 }

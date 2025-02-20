@@ -21,6 +21,7 @@ environment:
 dependencies:
   ffi: ^2.1.3
 
+  meta: ^1.16.0
   onnx_platform_interface:
     path: ../onnx_platform_interface
 

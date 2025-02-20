@@ -12,7 +12,7 @@ import '../../ffigen/bindings.dart';
 import '../../ffigen/extensions.dart';
 
 final class Environment extends Resource<OrtEnv> with base.Environment {
-  const Environment._(
+  Environment._(
     super.reference, {
     required this.logId,
     required this.loggingLevel,
@@ -22,7 +22,7 @@ final class Environment extends Resource<OrtEnv> with base.Environment {
   final base.LoggingLevel loggingLevel;
 
   factory Environment({
-    String logId = 'DartOnnxFFI',
+    String logId = '[onnxruntime_dart]',
     base.LoggingLevel loggingLevel = base.LoggingLevel.error,
   }) {
     final pointer = calloc<Pointer<OrtEnv>>();
@@ -45,15 +45,6 @@ final class Environment extends Resource<OrtEnv> with base.Environment {
       pointer.value,
       logId: logId,
       loggingLevel: loggingLevel,
-    ).withFinalizer(_finalizer);
+    );
   }
-
-  @override
-  String toString() {
-    return 'Environment(logId: \'$logId\', loggingLevel: $loggingLevel)';
-  }
-
-  static final _finalizer = NativeFinalizer(
-    OnnxRuntime.$.api.ReleaseEnv.cast(),
-  );
 }

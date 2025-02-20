@@ -1,14 +1,14 @@
 import 'dart:ffi';
 
-import 'package:ffi/ffi.dart';
 import 'package:onnx_platform_interface/onnx_platform_interface.dart' as base;
 
+import 'helpers.dart';
 import 'core/environment.dart';
 
 import '../ffigen/bindings.dart';
 import '../ffigen/typedefs.dart';
 
-final class OnnxRuntime implements base.OnnxRuntime {
+final class OnnxRuntime extends base.OnnxRuntime {
   OnnxRuntime._() {
     final bindings = OrtBindings(
       DynamicLibrary.open(
@@ -28,14 +28,13 @@ final class OnnxRuntime implements base.OnnxRuntime {
   static final $ = OnnxRuntime._();
 
   String get version {
-    return _version ??=
-        apiBase.GetVersionString.asFunction<GetVersionString>(
-          isLeaf: true,
-        )().cast<Utf8>().toDartString();
+    return _version ??= stringFromPtrManaged(
+      apiBase.GetVersionString.asFunction<GetVersionString>(isLeaf: true)(),
+    );
   }
 
   Environment get defaultEnv {
-    return _defaultEnv ??= Environment(loggingLevel: base.LoggingLevel.verbose);
+    return _defaultEnv ??= Environment(loggingLevel: base.LoggingLevel.warning);
   }
 
   // cache variables

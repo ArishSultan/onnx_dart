@@ -24,6 +24,11 @@ typedef CreateEnv =
 typedef ReleaseAllocator = void Function(Pointer<OrtAllocator> ref);
 typedef GetAllocatorWithDefaultOptions =
     Pointer<OrtStatus> Function(Pointer<Pointer<OrtAllocator>> ref);
+typedef AllocatorFree =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtAllocator> allocator,
+      Pointer<Void> data,
+    );
 
 // [OrtSession] Methods
 typedef ReleaseSession = void Function(Pointer<OrtSession> ref);
@@ -95,4 +100,61 @@ typedef ModelMetadataLookupCustomMetadataMap =
       Pointer<OrtAllocator> allocator,
       Pointer<Char> key,
       Pointer<Pointer<Char>> value,
+    );
+
+// [OrtTypeInfo] Methods
+typedef ReleaseTypeInfo = void Function(Pointer<OrtTypeInfo> input);
+typedef GetOnnxTypeFromTypeInfo =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtTypeInfo> typeInfo,
+      Pointer<UnsignedInt> ref,
+    );
+typedef CastTypeInfoToTensorInfo =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtTypeInfo> typeInfo,
+      Pointer<Pointer<OrtTensorTypeAndShapeInfo>> ref,
+    );
+
+// [OrtTensorTypeAndShapeInfo] Methods
+typedef CreateTensorTypeAndShapeInfo =
+    Pointer<OrtStatus> Function(
+      Pointer<Pointer<OrtTensorTypeAndShapeInfo>> ref,
+    );
+typedef SetTensorElementType =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtTensorTypeAndShapeInfo> info,
+      int type,
+    );
+typedef SetDimensions =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtTensorTypeAndShapeInfo> info,
+      Pointer<Int64> dimValues,
+      int dimCount,
+    );
+typedef GetTensorElementType =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtTensorTypeAndShapeInfo> info,
+      Pointer<UnsignedInt> ref,
+    );
+typedef GetDimensionsCount =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtTensorTypeAndShapeInfo> info,
+      Pointer<Size> ref,
+    );
+typedef GetDimensions =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtTensorTypeAndShapeInfo> info,
+      Pointer<Int64> dimValues,
+      int dimValuesLength,
+    );
+typedef GetSymbolicDimensions =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtTensorTypeAndShapeInfo> info,
+      Pointer<Pointer<Char>> dimParams,
+      int dimParamsLength,
+    );
+typedef GetTensorShapeElementCount =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtTensorTypeAndShapeInfo> info,
+      Pointer<Size> ref,
     );

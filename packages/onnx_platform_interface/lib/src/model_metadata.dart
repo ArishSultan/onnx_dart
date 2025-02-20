@@ -20,7 +20,7 @@ mixin class ModelMetadata {
 
   @override
   String toString() {
-    return "ModelMetadata(version: $version, domain: '$domain', "
-        "producer: '$producer', graphName: '$graphName', graphDescription: '$graphDescription', extraProperties: $extraProperties)";
+    return 'ModelMetadata(version: $version, domain: "$domain", '
+        'producer: "$producer", graphName: "$graphName", graphDescription: "$graphDescription", extraProperties: $extraProperties)';
   }
 }
