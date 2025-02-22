@@ -1,138 +1,127 @@
-import 'dart:ffi';
+import 'dart:ffi' as ffi;
 import 'dart:typed_data';
 
-import 'package:ffi/ffi.dart';
-import 'package:onnx_ffi/src/core/type_info.dart';
+import 'package:onnx_platform_interface/onnx_platform_interface.dart'
+    as platform_interface;
 
 import 'model_metadata.dart';
 import 'session_options.dart';
 
-import '../runtime.dart';
-import '../helpers.dart';
-import '../resource.dart';
-import '../core/status.dart';
-import '../core/environment.dart';
-import '../allocator/allocator.dart' as allocator;
+import '../environment.dart';
+import '../allocator/allocator.dart';
+import '../type_info/type_info.dart';
 
 import '../../ffigen/bindings.dart';
 import '../../ffigen/typedefs.dart';
-import '../../ffigen/extensions.dart';
+import '../../ffigen/interface.dart';
 
-final class Session extends Resource<OrtSession> {
-  Session._(super.reference);
+import '../../base/onnx_runtime.dart';
+import '../../base/native_resource.dart';
+
+final class Session extends NativeResource<OrtSession> {
+  Session._(super.ref) {
+    attachFinalizer(
+      _finalizer ??= ffi.NativeFinalizer(ortApi.ReleaseSession.cast()),
+    );
+  }
 
   factory Session(
     String path,
     SessionOptions options, {
     Environment? environment,
   }) {
-    environment ??= OnnxRuntime.$.defaultEnv;
-
-    final pointer = calloc<Pointer<OrtSession>>();
-    checkOrtStatus(
-      OnnxRuntime.$.api.createSession(
-        environment.ref,
-        path.toNativeUtf8().cast(),
+    return Session._(
+      ortApi.createSession(
+        path,
         options.ref,
-        pointer,
+        (environment ?? OnnxRuntime.instance.defaultEnv).ref,
       ),
     );
-
-    return Session._(pointer.$value);
   }
 
   factory Session.fromBytes(
     Uint8List bytes,
-    SessionOptions sessionOptions, {
+    SessionOptions options, {
     Environment? environment,
   }) {
-    environment ??= OnnxRuntime.$.defaultEnv;
-
-    final pointer = calloc<Pointer<OrtSession>>();
-    final modelBufferPtr = calloc.allocate<Uint8>(bytes.length);
-    modelBufferPtr.asTypedList(bytes.length).setRange(0, bytes.length, bytes);
-
-    checkOrtStatus(
-      OnnxRuntime.$.api.createSessionFromArray(
-        environment.ref,
-        modelBufferPtr.cast(),
-        bytes.length,
-        sessionOptions.ref,
-        pointer,
+    return Session._(
+      ortApi.createSessionFromBytes(
+        bytes,
+        options.ref,
+        (environment ?? OnnxRuntime.instance.defaultEnv).ref,
       ),
     );
-
-    // calloc.free(modelBufferPtr);
-
-    return Session._(pointer.$value);
   }
 
   ModelMetadata get modelMetadata {
-    return _modelMetadata ??= ModelMetadata.fromSession(this);
+    return _modelMetadata ??= ModelMetadata(
+      ortApi.sessionGetModelMetadata(ref),
+    );
   }
 
-  get inputs {
-    if (_inputs == null) {
-      final inputs = <String, dynamic>{};
-
-      _readIo(
-        OnnxRuntime.$.api.sessionGetInputCount,
-        OnnxRuntime.$.api.sessionGetInputName,
-        OnnxRuntime.$.api.sessionGetInputTypeInfo,
-        inputs,
-      );
-
-      _inputs = inputs;
-    }
-
-    return _inputs!;
+  Map<String, platform_interface.TypeInfo> get inputs {
+    return _inputs ??= _readIo(
+      ortApi.SessionGetInputCount.asFunction<SessionGetModelIOCount>(
+        isLeaf: true,
+      ),
+      ortApi.SessionGetInputName.asFunction<SessionGetModelIOName>(
+        isLeaf: true,
+      ),
+      ortApi.SessionGetInputTypeInfo.asFunction<SessionGetModelIoTypeInfo>(
+        isLeaf: true,
+      ),
+    );
   }
 
-  get outputs {
-    if (_outputs == null) {
-      final outputs = <String, dynamic>{};
-
-      _readIo(
-        OnnxRuntime.$.api.sessionGetOutputCount,
-        OnnxRuntime.$.api.sessionGetOutputName,
-        OnnxRuntime.$.api.sessionGetOutputTypeInfo,
-        outputs,
-      );
-
-      _outputs = outputs;
-    }
-
-    return _outputs!;
+  Map<String, platform_interface.TypeInfo> get outputs {
+    return _outputs ??= _readIo(
+      ortApi.SessionGetOutputCount.asFunction<SessionGetModelIOCount>(
+        isLeaf: true,
+      ),
+      ortApi.SessionGetOutputName.asFunction<SessionGetModelIOName>(
+        isLeaf: true,
+      ),
+      ortApi.SessionGetOutputTypeInfo.asFunction<SessionGetModelIoTypeInfo>(
+        isLeaf: true,
+      ),
+    );
   }
 
-  // cache variables
-  Map<String, dynamic>? _inputs;
-  Map<String, dynamic>? _outputs;
+  // cache
   ModelMetadata? _modelMetadata;
+  Map<String, platform_interface.TypeInfo>? _inputs;
+  Map<String, platform_interface.TypeInfo>? _outputs;
 
-  _readIo(
+  Map<String, platform_interface.TypeInfo> _readIo(
     SessionGetModelIOCount countFn,
     SessionGetModelIOName nameFn,
     SessionGetModelIoTypeInfo typeInfoFn,
-    Map<String, dynamic> outputRef,
   ) {
-    final countPtr = calloc<Size>();
-    checkOrtStatus(countFn(ref, countPtr));
+    final allocatorPtr = Allocator.$default().ref;
+    final count = ortApi.sessionGetIoCount(ref, countFn);
 
-    final ioCount = countPtr.value;
-    calloc.free(countPtr);
-
-    final allocatorPtr = allocator.Allocator.withDefaultOptions().ref;
-    for (var i = 0; i < ioCount; ++i) {
-      final namePtr = calloc<Pointer<Char>>();
-      final typeInfoPtr = calloc<Pointer<OrtTypeInfo>>();
-
-      nameFn(ref, i, allocatorPtr, namePtr);
-      typeInfoFn(ref, i, typeInfoPtr);
-
-      outputRef[stringFromPtrOnnxAllocated(namePtr.$value)] = resolveTypeInfo(
-        typeInfoPtr.$value,
+    final map = <String, platform_interface.TypeInfo>{};
+    for (var i = 0; i < count; ++i) {
+      final name = ortApi.sessionGetIoName(ref, i, allocatorPtr, nameFn);
+      final typeInfo = TypeInfo(
+        ortApi.sessionGetIoTypeInfo(ref, i, typeInfoFn),
       );
+
+      final actualTypeInfo = switch (typeInfo.onnxType) {
+        ONNXType.ONNX_TYPE_UNKNOWN => throw UnimplementedError(),
+        ONNXType.ONNX_TYPE_TENSOR => typeInfo.cast<OrtTensorTypeAndShapeInfo>(),
+        ONNXType.ONNX_TYPE_SEQUENCE => throw UnimplementedError(),
+        ONNXType.ONNX_TYPE_MAP => throw UnimplementedError(),
+        ONNXType.ONNX_TYPE_OPAQUE => throw UnimplementedError(),
+        ONNXType.ONNX_TYPE_SPARSETENSOR => throw UnimplementedError(),
+        ONNXType.ONNX_TYPE_OPTIONAL => throw UnimplementedError(),
+      };
+
+      map[name] = actualTypeInfo as platform_interface.TensorInfo;
     }
+
+    return map;
   }
+
+  static ffi.NativeFinalizer? _finalizer;
 }

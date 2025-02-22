@@ -1,5 +1,7 @@
 import 'dart:ffi';
 
+import 'package:meta/meta.dart';
+
 /// A class that manages native resources with proper cleanup handling.
 ///
 /// This class provides a safe wrapper around native pointers with automatic
@@ -23,23 +25,28 @@ abstract base class NativeResource<T extends NativeType>
 
   /// Attaches a finalizer to this resource for automatic cleanup.
   ///
-  /// [finalizer] specifies how the native resource should be cleaned up.
-  /// Returns the resource cast to the specified type [V].
+  /// [finalizer] specifies how the native resource should be cleaned up and it
+  /// is preferred to call this in the constructor since the resource should be
+  /// attached to finalizer as soon as it is created.
   ///
   /// Example usage:
   /// ```dart
   /// class SomeObject extends NativeResource<Void> {
-  ///   // ....
+  ///   SomeObject(super.ref) {
+  ///     attachFinalizer(this);
+  ///   }
+  ///
+  ///   static NativeFinalizer = NativeFinalizer(...);
   /// }
   ///
   /// final resource = SomeObject(pointer).withFinalizer(myFinalizer);
+  /// resource.attachFinalizer(myFinalizer);
   /// ```
-  V withFinalizer<U extends NativeType, V extends NativeResource<U>>(
+  @protected
+  void attachFinalizer<U extends NativeType, V extends NativeResource<U>>(
     NativeFinalizer finalizer,
   ) {
     finalizer.attach(this, ref.cast(), detach: this);
-
-    return this as V;
   }
 
   /// Safely casts the native pointer to a different type.

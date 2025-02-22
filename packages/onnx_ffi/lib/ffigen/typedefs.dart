@@ -8,8 +8,8 @@ typedef GetVersionString = Pointer<Char> Function();
 
 // [OrtStatus] Methods
 typedef ReleaseStatus = void Function(Pointer<OrtStatus> ref);
-typedef GetStatusCode = int Function(Pointer<OrtStatus> status);
-typedef GetStatusMessage = Pointer<Char> Function(Pointer<OrtStatus> status);
+typedef GetErrorCode = int Function(Pointer<OrtStatus> status);
+typedef GetErrorMessage = Pointer<Char> Function(Pointer<OrtStatus> status);
 
 // [OrtEnv] Methods
 typedef ReleaseEnv = void Function(Pointer<OrtEnv> ref);

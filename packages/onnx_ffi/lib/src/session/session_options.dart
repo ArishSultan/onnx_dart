@@ -1,22 +1,20 @@
 import 'dart:ffi';
 
-import 'package:ffi/ffi.dart';
-
-import '../helpers.dart';
-import '../runtime.dart';
-import '../resource.dart';
-import '../core/status.dart';
-
 import '../../ffigen/bindings.dart';
-import '../../ffigen/extensions.dart';
+import '../../ffigen/interface.dart';
 
-final class SessionOptions extends Resource<OrtSessionOptions> {
-  SessionOptions._(super.reference);
+import '../../base/native_resource.dart';
+
+final class SessionOptions extends NativeResource<OrtSessionOptions> {
+  SessionOptions._(super.reference) {
+    attachFinalizer(
+      _finalizer ??= NativeFinalizer(ortApi.ReleaseSessionOptions.cast()),
+    );
+  }
 
   factory SessionOptions() {
-    final pointer = calloc<Pointer<OrtSessionOptions>>();
-    checkOrtStatus(OnnxRuntime.$.api.createSessionOptions(pointer));
-
-    return SessionOptions._(pointer.$value);
+    return SessionOptions._(ortApi.createSessionOptions());
   }
+
+  static NativeFinalizer? _finalizer;
 }

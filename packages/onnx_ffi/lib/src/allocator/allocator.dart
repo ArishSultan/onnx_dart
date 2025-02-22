@@ -1,32 +1,26 @@
 import 'dart:ffi';
 
-import 'package:ffi/ffi.dart';
-
-import '../runtime.dart';
-import '../helpers.dart';
-import '../resource.dart';
-import '../core/status.dart';
-
 import '../../ffigen/bindings.dart';
-import '../../ffigen/extensions.dart';
+import '../../ffigen/interface.dart';
 
-final class Allocator extends Resource<OrtAllocator> {
-  const Allocator._(super.ref);
+import '../../base/native_resource.dart';
 
-  factory Allocator.withDefaultOptions() {
-    if (_defaultAllocator == null) {
-      final pointer = calloc<Pointer<OrtAllocator>>();
-      checkOrtStatus(OnnxRuntime.$.api.getAllocatorWithDefaultOptions(pointer));
+final class Allocator extends NativeResource<OrtAllocator> {
+  Allocator._default(super.ref);
 
-      _defaultAllocator = Allocator._(pointer.$value);
-    }
+  Allocator._(super.ref) {
+    attachFinalizer(
+      _finalizer ?? NativeFinalizer(ortApi.ReleaseAllocator.cast()),
+    );
+  }
 
-    return _defaultAllocator!;
+  factory Allocator.$default() {
+    return _defaultAllocator ??= Allocator._default(
+      ortApi.getAllocatorWithDefaultOptions(),
+    );
   }
 
   static Allocator? _defaultAllocator;
 
-  static final _finalizer = NativeFinalizer(
-    OnnxRuntime.$.api.ReleaseAllocator.cast(),
-  );
+  static NativeFinalizer? _finalizer;
 }
