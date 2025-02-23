@@ -158,3 +158,23 @@ typedef GetTensorShapeElementCount =
       Pointer<OrtTensorTypeAndShapeInfo> info,
       Pointer<Size> ref,
     );
+
+// [OrtValue] related methods
+typedef CreateTensorAsOrtValue =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtAllocator> allocatorPtr,
+      Pointer<Int64> shapePtr,
+      int shapeLen,
+      int type,
+      Pointer<Pointer<OrtValue>> ref,
+    );
+typedef CreateTensorWithDataAsOrtValue =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtMemoryInfo> info,
+      Pointer<Void> pData,
+      int pDataLen,
+      Pointer<Int64> shapePtr,
+      int shapeLen,
+      int type,
+      Pointer<Pointer<OrtValue>> ref,
+    );

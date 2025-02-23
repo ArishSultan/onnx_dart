@@ -8,7 +8,7 @@ import 'model_metadata.dart';
 import 'session_options.dart';
 
 import '../environment.dart';
-import '../allocator/allocator.dart';
+import '../memory/allocator.dart';
 import '../type_info/type_info.dart';
 
 import '../../ffigen/bindings.dart';
@@ -97,7 +97,7 @@ final class Session extends NativeResource<OrtSession> {
     SessionGetModelIOName nameFn,
     SessionGetModelIoTypeInfo typeInfoFn,
   ) {
-    final allocatorPtr = Allocator.$default().ref;
+    final allocatorPtr = Allocator.$default.ref;
     final count = ortApi.sessionGetIoCount(ref, countFn);
 
     final map = <String, platform_interface.TypeInfo>{};

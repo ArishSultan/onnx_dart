@@ -359,6 +359,51 @@ extension OrtApiDartInterface on OrtApi {
 
     return symbolicDimensions;
   }
+
+  // [OrtValue] related methods
+  createTensorAsOrtValue(
+    Pointer<OrtAllocator> allocatorPtr,
+    List<int> shape,
+    int type,
+  ) {
+    final pointer = malloc<Pointer<OrtValue>>();
+    final shapeArrPtr = malloc<Int64>(shape.length);
+    shapeArrPtr.asTypedList(shape.length).setRange(0, shape.length, shape);
+
+    _checkStatus(
+      CreateTensorAsOrtValue.asFunction<types.CreateTensorAsOrtValue>(
+        isLeaf: true,
+      )(allocatorPtr, shapeArrPtr, shape.length, type, pointer),
+    );
+
+    final tensorPtr = pointer.value;
+    malloc.free(shapeArrPtr);
+    malloc.free(pointer);
+
+    return tensorPtr;
+  }
+
+  createTensorWithDataAsOrtValue(
+    Pointer<OrtAllocator> allocatorPtr,
+    List<int> shape,
+    int type,
+  ) {
+    final pointer = malloc<Pointer<OrtValue>>();
+    final shapeArrPtr = malloc<Int64>(shape.length);
+    shapeArrPtr.asTypedList(shape.length).setRange(0, shape.length, shape);
+
+    // _checkStatus(
+    //   CreateTensorWithDataAsOrtValue.asFunction<
+    //     types.CreateTensorWithDataAsOrtValue
+    //   >(isLeaf: true)(allocatorPtr, shapeArrPtr, shape.length, type, pointer),
+    // );
+
+    final tensorPtr = pointer.value;
+    malloc.free(shapeArrPtr);
+    malloc.free(pointer);
+
+    return tensorPtr;
+  }
 }
 
 void _checkStatus(Pointer<OrtStatus> status) {

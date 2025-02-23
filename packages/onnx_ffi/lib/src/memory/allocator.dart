@@ -14,7 +14,11 @@ final class Allocator extends NativeResource<OrtAllocator> {
     );
   }
 
-  factory Allocator.$default() {
+  ///
+
+
+  ///
+  static Allocator get $default {
     return _defaultAllocator ??= Allocator._default(
       ortApi.getAllocatorWithDefaultOptions(),
     );
