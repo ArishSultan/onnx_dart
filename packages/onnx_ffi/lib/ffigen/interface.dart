@@ -55,6 +55,19 @@ extension OrtApiDartInterface on OrtApi {
     return pointer.dispose();
   }
 
+  Pointer<OrtMemoryInfo> allocatorGetInfo(Pointer<OrtAllocator> allocatorPtr) {
+    final pointer = malloc<Pointer<OrtMemoryInfo>>();
+
+    _checkStatus(
+      ortApi.AllocatorGetInfo.asFunction<types.AllocatorGetInfo>(isLeaf: true)(
+        allocatorPtr,
+        pointer,
+      ),
+    );
+
+    return pointer.dispose();
+  }
+
   void allocatorFree(
     Pointer<OrtAllocator> allocatorPtr,
     Pointer<Void> resourcePtr,
@@ -65,6 +78,71 @@ extension OrtApiDartInterface on OrtApi {
         resourcePtr,
       ),
     );
+  }
+
+  // [OrtMemoryInfo] related methods
+  int memoryInfoGetDeviceType(Pointer<OrtMemoryInfo> memoryInfoPtr) {
+    final pointer = malloc<UnsignedInt>();
+    ortApi.MemoryInfoGetDeviceType.asFunction<types.MemoryInfoGetDeviceType>(
+      isLeaf: true,
+    )(memoryInfoPtr, pointer);
+
+    final deviceType = pointer.value;
+    malloc.free(pointer);
+
+    return deviceType;
+  }
+
+  int memoryInfoGetId(Pointer<OrtMemoryInfo> memoryInfoPtr) {
+    final pointer = malloc<Int>();
+    ortApi.MemoryInfoGetId.asFunction<types.MemoryInfoGetIntValue>(
+      isLeaf: true,
+    )(memoryInfoPtr, pointer);
+
+    final id = pointer.value;
+    malloc.free(pointer);
+
+    return id;
+  }
+
+  int memoryInfoGetMemType(Pointer<OrtMemoryInfo> memoryInfoPtr) {
+    final pointer = malloc<Int>();
+    ortApi.MemoryInfoGetMemType.asFunction<types.MemoryInfoGetIntValue>(
+      isLeaf: true,
+    )(memoryInfoPtr, pointer);
+
+    final memType = pointer.value;
+    malloc.free(pointer);
+
+    return memType;
+  }
+
+  String memoryInfoGetName(Pointer<OrtMemoryInfo> memoryInfoPtr, bool managed) {
+    final pointer = malloc<Pointer<Char>>();
+    ortApi.MemoryInfoGetName.asFunction<types.MemoryInfoGetStringValue>(
+      isLeaf: true,
+    )(memoryInfoPtr, pointer);
+
+    final namePtr = pointer.dispose();
+    final nameStr = namePtr.cast<Utf8>().toDartString();
+
+    if (!managed) {
+      malloc.free(namePtr);
+    }
+
+    return nameStr;
+  }
+
+  int memoryInfoGetType(Pointer<OrtMemoryInfo> memoryInfoPtr) {
+    final pointer = malloc<Int>();
+    ortApi.MemoryInfoGetType.asFunction<types.MemoryInfoGetIntValue>(
+      isLeaf: true,
+    )(memoryInfoPtr, pointer);
+
+    final type = pointer.value;
+    malloc.free(pointer);
+
+    return type;
   }
 
   // [OrtEnv] related methods
@@ -361,10 +439,9 @@ extension OrtApiDartInterface on OrtApi {
   }
 
   // [OrtValue] related methods
-  createTensorAsOrtValue(
+  Pointer<OrtValue> createTensorAsOrtValue<T extends TypedDataList>(
     Pointer<OrtAllocator> allocatorPtr,
     List<int> shape,
-    int type,
   ) {
     final pointer = malloc<Pointer<OrtValue>>();
     final shapeArrPtr = malloc<Int64>(shape.length);
@@ -373,7 +450,13 @@ extension OrtApiDartInterface on OrtApi {
     _checkStatus(
       CreateTensorAsOrtValue.asFunction<types.CreateTensorAsOrtValue>(
         isLeaf: true,
-      )(allocatorPtr, shapeArrPtr, shape.length, type, pointer),
+      )(
+        allocatorPtr,
+        shapeArrPtr,
+        shape.length,
+        resolveOnnxTypeFromDartType(T),
+        pointer,
+      ),
     );
 
     final tensorPtr = pointer.value;
@@ -383,27 +466,109 @@ extension OrtApiDartInterface on OrtApi {
     return tensorPtr;
   }
 
-  createTensorWithDataAsOrtValue(
-    Pointer<OrtAllocator> allocatorPtr,
+  Pointer<OrtValue> createTensorWithDataAsOrtValue<T extends TypedDataList>(
+    Pointer<OrtMemoryInfo> memoryInfoPtr,
+    T data,
     List<int> shape,
-    int type,
   ) {
     final pointer = malloc<Pointer<OrtValue>>();
     final shapeArrPtr = malloc<Int64>(shape.length);
     shapeArrPtr.asTypedList(shape.length).setRange(0, shape.length, shape);
 
-    // _checkStatus(
-    //   CreateTensorWithDataAsOrtValue.asFunction<
-    //     types.CreateTensorWithDataAsOrtValue
-    //   >(isLeaf: true)(allocatorPtr, shapeArrPtr, shape.length, type, pointer),
-    // );
+    final convertedData = data.buffer.asUint8List();
+    final dataArrayPtr = malloc<Int8>(convertedData.length);
+    dataArrayPtr
+        .asTypedList(convertedData.length)
+        .setRange(0, convertedData.length, convertedData);
 
-    final tensorPtr = pointer.value;
+    _checkStatus(
+      CreateTensorWithDataAsOrtValue.asFunction<
+        types.CreateTensorWithDataAsOrtValue
+      >(isLeaf: true)(
+        memoryInfoPtr,
+        dataArrayPtr.cast(),
+        data.lengthInBytes,
+        shapeArrPtr,
+        shape.length,
+        resolveOnnxTypeFromDartType(T),
+        pointer,
+      ),
+    );
+
     malloc.free(shapeArrPtr);
-    malloc.free(pointer);
-
-    return tensorPtr;
+    return pointer.dispose();
   }
+
+  tensorAt<T extends TypedDataList>(
+    Pointer<OrtValue> valuePtr,
+    List<int> index,
+  ) {
+    final pointer = malloc<Pointer<Void>>();
+    final indexArrPtr = malloc<Int64>(index.length);
+    indexArrPtr.asTypedList(index.length).setRange(0, index.length, index);
+
+    _checkStatus(
+      TensorAt.asFunction<types.TensorAt>(isLeaf: true)(
+        valuePtr,
+        indexArrPtr,
+        index.length,
+        pointer,
+      ),
+    );
+
+    final data = pointer.dispose();
+    return switch (T) {
+      Int8List => data.cast<Int8>().asTypedList(1),
+      Int16List => data.cast<Int16>().asTypedList(1),
+      Int32List => data.cast<Int32>().asTypedList(1),
+      Int64List => data.cast<Int64>().asTypedList(1),
+
+      Uint8List => data.cast<Uint8>().asTypedList(1),
+      Uint16List => data.cast<Uint8>().asTypedList(1),
+      Uint32List => data.cast<Uint8>().asTypedList(1),
+      Uint64List => data.cast<Uint8>().asTypedList(1),
+
+      Float32List => data.cast<Float>().asTypedList(1),
+      Float64List => data.cast<Double>().asTypedList(1),
+
+      _ => throw UnimplementedError(),
+    };
+  }
+}
+
+int resolveOnnxTypeFromDartType(Type type) {
+  return switch (type) {
+    const (List<bool>) => 9, // ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING(8),
+    const (List<String>) => 8, // ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL(9),
+
+    Int8List => 3, // ONNX_TENSOR_ELEMENT_DATA_TYPE_INT8
+    Int16List => 5, // ONNX_TENSOR_ELEMENT_DATA_TYPE_INT16
+    Int32List => 6, // ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32
+    Int64List => 7, // ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64
+
+    Uint8List => 2, // ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8
+    Uint16List => 4, // ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16
+    Uint32List => 12, // ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT32
+    Uint64List => 13, // ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT64
+
+    Float32List => 1, // ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT
+    Float64List => 11, // ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE
+    // These types are not supported by dart as of now
+    // -----------------------------------------------
+    //
+    // ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED(0),
+    // ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16(10),
+    // ONNX_TENSOR_ELEMENT_DATA_TYPE_COMPLEX64(14),
+    // ONNX_TENSOR_ELEMENT_DATA_TYPE_COMPLEX128(15),
+    // ONNX_TENSOR_ELEMENT_DATA_TYPE_BFLOAT16(16),
+    // ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT8E4M3FN(17),
+    // ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT8E4M3FNUZ(18),
+    // ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT8E5M2(19),
+    // ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT8E5M2FNUZ(20),
+    // ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT4(21),
+    // ONNX_TENSOR_ELEMENT_DATA_TYPE_INT4(22)
+    _ => throw UnimplementedError(),
+  };
 }
 
 void _checkStatus(Pointer<OrtStatus> status) {
@@ -415,7 +580,9 @@ void _checkStatus(Pointer<OrtStatus> status) {
   }
 
   final code = ortApi.getErrorCode(status);
-  final _ /*message*/ = ortApi.getErrorMessage(status);
+  final message = ortApi.getErrorMessage(status);
+
+  print('code: $code, message: $message');
 
   ortApi.releaseStatus(status);
 

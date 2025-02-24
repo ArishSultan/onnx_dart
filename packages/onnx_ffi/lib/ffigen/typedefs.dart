@@ -20,14 +20,36 @@ typedef CreateEnv =
       Pointer<Pointer<OrtEnv>> ref,
     );
 
-// [OrtAllocator]
+// [OrtAllocator] Methods
 typedef ReleaseAllocator = void Function(Pointer<OrtAllocator> ref);
 typedef GetAllocatorWithDefaultOptions =
     Pointer<OrtStatus> Function(Pointer<Pointer<OrtAllocator>> ref);
+typedef AllocatorGetInfo =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtAllocator> allocatorPtr,
+      Pointer<Pointer<OrtMemoryInfo>> ref,
+    );
 typedef AllocatorFree =
     Pointer<OrtStatus> Function(
       Pointer<OrtAllocator> allocator,
       Pointer<Void> data,
+    );
+
+// [OrtMemoryInfo] Methods
+typedef MemoryInfoGetDeviceType =
+    void Function(
+      Pointer<OrtMemoryInfo> memoryInfoPtr,
+      Pointer<UnsignedInt> ref,
+    );
+typedef MemoryInfoGetIntValue =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtMemoryInfo> memoryInfoPtr,
+      Pointer<Int> ref,
+    );
+typedef MemoryInfoGetStringValue =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtMemoryInfo> memoryInfoPtr,
+      Pointer<Pointer<Char>> ref,
     );
 
 // [OrtSession] Methods
@@ -177,4 +199,11 @@ typedef CreateTensorWithDataAsOrtValue =
       int shapeLen,
       int type,
       Pointer<Pointer<OrtValue>> ref,
+    );
+typedef TensorAt =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtValue> valuePtr,
+      Pointer<Int64> locationValues,
+      int locationValuesCount,
+      Pointer<Pointer<Void>> ref,
     );
