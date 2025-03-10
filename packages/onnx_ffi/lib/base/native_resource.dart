@@ -49,6 +49,15 @@ abstract base class NativeResource<T extends NativeType>
     finalizer.attach(this, ref.cast(), detach: this);
   }
 
+  /// Detaches a finalizer from this resource, it is necessary in case the reference
+  /// is no longer managed by current class.
+  @protected
+  void detachFinalizer<U extends NativeType, V extends NativeResource<U>>(
+    NativeFinalizer finalizer,
+  ) {
+    finalizer.detach(this);
+  }
+
   /// Safely casts the native pointer to a different type.
   ///
   /// [U] is the target native type to cast to.
