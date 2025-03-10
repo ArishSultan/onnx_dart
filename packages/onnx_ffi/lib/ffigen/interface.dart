@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
+import 'package:onnx_ffi/src/values/value.dart';
 
 import 'bindings.dart';
 import 'typedefs.dart' as types;
@@ -176,6 +178,19 @@ extension OrtApiDartInterface on OrtApi {
     return pointer.dispose();
   }
 
+  // [OrtRunOptions] related methods
+  Pointer<OrtRunOptions> createRunOptions() {
+    final pointer = malloc<Pointer<OrtRunOptions>>();
+
+    _checkStatus(
+      CreateRunOptions.asFunction<types.CreateRunOptions>(isLeaf: true)(
+        pointer,
+      ),
+    );
+
+    return pointer.dispose();
+  }
+
   // [OrtSession] related methods
   Pointer<OrtSession> createSession(
     String modelPath,
@@ -287,6 +302,80 @@ extension OrtApiDartInterface on OrtApi {
     return typeInfoPtr;
   }
 
+  Future<List<Pointer<OrtValue>>> runAsync(
+    Pointer<OrtSession> sessionPtr,
+    Pointer<OrtRunOptions> runOptionsPtr,
+    Map<String, OnnxValue> inputs,
+    List<String> outputs,
+  ) {
+    final completer = Completer<List<Pointer<OrtValue>>>();
+
+    // TODO: Fix this implementation for proper use.
+    final id = _asyncFunctions.length;
+    _asyncFunctions[id] = completer;
+
+    final pointer = malloc<Pointer<OrtValue>>();
+    final (outputNamesPtr, outputLen) = _dissembleOutputList(outputs);
+    final (inputNamesPtr, inputValuesPtr, inputLen) = _dissembleInputMap(
+      inputs,
+    );
+
+    final userDataPtr = malloc<Int>();
+    userDataPtr.value = id;
+
+    _checkStatus(
+      RunAsync.asFunction<types.RunAsync>(isLeaf: true)(
+        sessionPtr,
+        runOptionsPtr,
+        inputNamesPtr,
+        inputValuesPtr,
+        inputLen,
+        outputNamesPtr,
+        outputLen,
+        pointer,
+        _pointerHandleAsyncCallback.nativeFunction,
+        userDataPtr.cast(),
+      ),
+    );
+
+    return completer.future;
+  }
+
+  List<Pointer<OrtValue>> run(
+    Pointer<OrtSession> sessionPtr,
+    Pointer<OrtRunOptions> runOptionsPtr,
+    Map<String, OnnxValue> inputs,
+    List<String> outputs,
+  ) {
+    final pointer = malloc<Pointer<OrtValue>>();
+    final (outputNamesPtr, outputLen) = _dissembleOutputList(outputs);
+    final (inputNamesPtr, inputValuesPtr, inputLen) = _dissembleInputMap(
+      inputs,
+    );
+
+    _checkStatus(
+      Run.asFunction<types.Run>(isLeaf: true)(
+        sessionPtr,
+        runOptionsPtr,
+        inputNamesPtr,
+        inputValuesPtr,
+        inputLen,
+        outputNamesPtr,
+        outputLen,
+        pointer,
+      ),
+    );
+
+    final outputList = <Pointer<OrtValue>>[];
+    for (var i = 0; i < outputLen; ++i) {
+      outputList.add(pointer[i]);
+    }
+
+    malloc.free(pointer);
+
+    return outputList;
+  }
+
   // [OrtModelMetadata] related methods
   int modelMetadataGetVersion(Pointer<OrtModelMetadata> metadataPtr) {
     final pointer = malloc<Int64>();
@@ -395,6 +484,22 @@ extension OrtApiDartInterface on OrtApi {
     return sizeCount;
   }
 
+  int getTensorElementType(Pointer<OrtTensorTypeAndShapeInfo> tensorInfoPtr) {
+    final pointer = malloc<UnsignedInt>();
+
+    _checkStatus(
+      GetTensorElementType.asFunction<types.GetTensorElementType>(isLeaf: true)(
+        tensorInfoPtr,
+        pointer,
+      ),
+    );
+
+    final elementType = pointer.value;
+    malloc.free(pointer);
+
+    return elementType;
+  }
+
   List<int> getTensorShape(
     Pointer<OrtTensorTypeAndShapeInfo> tensorInfoPtr,
     int dimensionCount,
@@ -409,7 +514,7 @@ extension OrtApiDartInterface on OrtApi {
     );
 
     final dimensions = pointer.asTypedList(dimensionCount).toList();
-    malloc.free(pointer);
+    // malloc.free(pointer);
 
     return dimensions;
   }
@@ -534,6 +639,69 @@ extension OrtApiDartInterface on OrtApi {
       _ => throw UnimplementedError(),
     };
   }
+}
+
+Map<int, Completer<List<Pointer<OrtValue>>>> _asyncFunctions = {};
+
+final _pointerHandleAsyncCallback =
+    NativeCallable<RunAsyncCallbackFnFunction>.listener(
+      _handleAsyncCallback,
+    );
+
+void _handleAsyncCallback(
+  Pointer<Void> userData,
+  Pointer<Pointer<OrtValue>> outputs,
+  int outputsCount,
+  Pointer<OrtStatus> status,
+) {
+  final id = userData.cast<Int>().value;
+  malloc.free(userData);
+
+  final completer = _asyncFunctions.remove(id)!;
+  try {
+    _checkStatus(status);
+
+    final outputList = <Pointer<OrtValue>>[];
+    for (var i = 0; i < outputsCount; ++i) {
+      outputList.add(outputs[i]);
+    }
+
+    malloc.free(outputs);
+
+    completer.complete(outputList);
+  } catch (err) {
+    malloc.free(outputs);
+    completer.completeError(err);
+  }
+}
+
+(Pointer<Pointer<Char>>, Pointer<Pointer<OrtValue>>, int) _dissembleInputMap(
+  Map<String, OnnxValue> value,
+) {
+  final names = value.keys.toList();
+  final values = value.values.toList();
+
+  final nameArrayPtr = malloc<Pointer<Char>>(names.length);
+  for (var i = 0; i < names.length; ++i) {
+    nameArrayPtr[i] = names[i].toNativeUtf8().cast();
+  }
+
+  final valueArrayPtr = malloc<Pointer<OrtValue>>(values.length);
+  for (var i = 0; i < values.length; ++i) {
+    valueArrayPtr[i] = values[i].ref;
+  }
+
+  return (nameArrayPtr, valueArrayPtr, value.length);
+}
+
+(Pointer<Pointer<Char>>, int) _dissembleOutputList(List<String> values) {
+  final names = values.toList();
+  final nameArrayPtr = malloc<Pointer<Char>>(names.length);
+  for (var i = 0; i < names.length; ++i) {
+    nameArrayPtr[i] = names[i].toNativeUtf8().cast();
+  }
+
+  return (nameArrayPtr, values.length);
 }
 
 int resolveOnnxTypeFromDartType(Type type) {

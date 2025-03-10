@@ -1,21 +1,19 @@
 import 'dart:ffi' as ffi;
 import 'dart:typed_data';
 
+import 'value.dart';
+
 import '../memory/allocator.dart';
 
-import '../../ffigen/bindings.dart';
 import '../../ffigen/interface.dart';
 
-import '../../base/native_resource.dart';
-
-final class Tensor<T extends TypedDataList> extends NativeResource<OrtValue> {
-  Tensor._(super.ref, this.shape, this._data) {
+final class Tensor<T extends TypedDataList> extends OnnxValue {
+  Tensor._(super.ref, this.shape) {
     attachFinalizer(
       _finalizer ??= ffi.NativeFinalizer(ortApi.ReleaseValue.cast()),
     );
   }
 
-  final T _data;
   final List<int> shape;
 
   factory Tensor(List<int> shape, {Allocator? allocator}) {
@@ -24,7 +22,7 @@ final class Tensor<T extends TypedDataList> extends NativeResource<OrtValue> {
       shape,
     );
 
-    return Tensor._(tensorRef, shape, [] as T);
+    return Tensor._(tensorRef, shape);
   }
 
   factory Tensor.withData(List<int> shape, T data, {Allocator? allocator}) {
@@ -34,7 +32,11 @@ final class Tensor<T extends TypedDataList> extends NativeResource<OrtValue> {
       shape,
     );
 
-    return Tensor._(tensorRef, shape, data);
+    return Tensor._(tensorRef, shape);
+  }
+
+  factory Tensor.fromBaseValue(List<int> shape, OnnxValue value) {
+    return Tensor._(value.ref, shape);
   }
 
   num operator [](List<int> index) {

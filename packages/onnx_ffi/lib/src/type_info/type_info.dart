@@ -22,6 +22,10 @@ final class TypeInfo extends NativeResource<OrtTypeInfo> {
       _ => throw UnimplementedError(),
     };
 
+    if (_finalizer != null) {
+      detachFinalizer(_finalizer!);
+    }
+
     return value as NativeResource<U>;
   }
 

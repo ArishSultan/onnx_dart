@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:ffi' as ffi;
 import 'dart:typed_data';
 
+import 'package:onnx_ffi/src/session/run_options.dart';
+import 'package:onnx_ffi/src/values/value.dart';
 import 'package:onnx_platform_interface/onnx_platform_interface.dart'
     as platform_interface;
 
@@ -85,6 +88,36 @@ final class Session extends NativeResource<OrtSession> {
         isLeaf: true,
       ),
     );
+  }
+
+  Map<String, OnnxValue> runSync(
+    Map<String, OnnxValue> inputs,
+    RunOptions options,
+  ) {
+    final outputDict = <String, OnnxValue>{};
+    final outputKeys = outputs.keys.toList();
+    final output = ortApi.run(ref, options.ref, inputs, outputKeys);
+
+    for (var i = 0; i < output.length; ++i) {
+      outputDict[outputKeys[i]] = OnnxValue(output[i]);
+    }
+
+    return outputDict;
+  }
+
+  Future<Map<String, OnnxValue>> run(
+    Map<String, OnnxValue> inputs,
+    RunOptions options,
+  ) async {
+    final outputDict = <String, OnnxValue>{};
+    final outputKeys = outputs.keys.toList();
+    final output = await ortApi.runAsync(ref, options.ref, inputs, outputKeys);
+
+    for (var i = 0; i < output.length; ++i) {
+      outputDict[outputKeys[i]] = OnnxValue(output[i]);
+    }
+
+    return outputDict;
   }
 
   // cache

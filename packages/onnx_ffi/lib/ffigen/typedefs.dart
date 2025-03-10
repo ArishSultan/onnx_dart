@@ -76,7 +76,6 @@ typedef SessionGetModelMetadata =
     );
 typedef SessionGetModelIOCount =
     Pointer<OrtStatus> Function(Pointer<OrtSession> session, Pointer<Size> ref);
-
 typedef SessionGetModelIOName =
     Pointer<OrtStatus> Function(
       Pointer<OrtSession> session,
@@ -90,11 +89,39 @@ typedef SessionGetModelIoTypeInfo =
       int index,
       Pointer<Pointer<OrtTypeInfo>> typeInfo,
     );
+typedef Run =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtSession> sessionPtr,
+      Pointer<OrtRunOptions> runOptionsPtr,
+      Pointer<Pointer<Char>> inputNames,
+      Pointer<Pointer<OrtValue>> inputs,
+      int inputLen,
+      Pointer<Pointer<Char>> outputNames,
+      int outputNamesLen,
+      Pointer<Pointer<OrtValue>> ref,
+    );
+typedef RunAsync =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtSession> sessionPtr,
+      Pointer<OrtRunOptions> runOptionsPtr,
+      Pointer<Pointer<Char>> inputNames,
+      Pointer<Pointer<OrtValue>> inputs,
+      int inputLen,
+      Pointer<Pointer<Char>> outputNames,
+      int outputNamesLen,
+      Pointer<Pointer<OrtValue>> ref,
+      RunAsyncCallbackFn runAsyncCallback,
+      Pointer<Void> userData,
+    );
 
 // [OrtSessionOptions] Methods
 typedef ReleaseSessionOptions = void Function(Pointer<OrtSessionOptions> ref);
 typedef CreateSessionOptions =
     Pointer<OrtStatus> Function(Pointer<Pointer<OrtSessionOptions>> ref);
+
+// [OrtRunOptions] Methods
+typedef CreateRunOptions =
+    Pointer<OrtStatus> Function(Pointer<Pointer<OrtRunOptions>> ref);
 
 // [OrtModelMetadata] Methods
 typedef ReleaseModelMetadata = Function();

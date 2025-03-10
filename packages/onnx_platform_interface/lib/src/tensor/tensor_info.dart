@@ -3,6 +3,9 @@ import '../type_info.dart';
 ///
 abstract mixin class TensorInfo implements TypeInfo {
   ///
+  Type get type;
+
+  ///
   List<int> get shape;
 
   ///
@@ -10,6 +13,6 @@ abstract mixin class TensorInfo implements TypeInfo {
 
   @override
   String toString() {
-    return 'TensorInfo(shape: $shape)';
+    return 'TensorInfo(type: $type, shape: $shape)';
   }
 }
