@@ -1,4 +1,3 @@
-import 'dart:ffi' as ffi;
 import 'dart:typed_data';
 
 import 'value.dart';
@@ -8,11 +7,7 @@ import '../memory/allocator.dart';
 import '../../ffigen/interface.dart';
 
 final class Tensor<T extends TypedDataList> extends OnnxValue {
-  Tensor._(super.ref, this.shape) {
-    attachFinalizer(
-      _finalizer ??= ffi.NativeFinalizer(ortApi.ReleaseValue.cast()),
-    );
-  }
+  Tensor._(super.ref, this.shape);
 
   final List<int> shape;
 
@@ -46,6 +41,4 @@ final class Tensor<T extends TypedDataList> extends OnnxValue {
 
     return ortApi.tensorAt<T>(ref, index)[0];
   }
-
-  static ffi.NativeFinalizer? _finalizer;
 }
