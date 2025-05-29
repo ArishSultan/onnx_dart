@@ -314,7 +314,7 @@ extension OrtApiDartInterface on OrtApi {
     final id = _asyncFunctions.length;
     _asyncFunctions[id] = completer;
 
-    final pointer = malloc<Pointer<OrtValue>>();
+    final pointer = malloc<Pointer<OrtValue>>(outputs.length);
     final (outputNamesPtr, outputLen) = _dissembleOutputList(outputs);
     final (inputNamesPtr, inputValuesPtr, inputLen) = _dissembleInputMap(
       inputs,
@@ -644,9 +644,7 @@ extension OrtApiDartInterface on OrtApi {
 Map<int, Completer<List<Pointer<OrtValue>>>> _asyncFunctions = {};
 
 final _pointerHandleAsyncCallback =
-    NativeCallable<RunAsyncCallbackFnFunction>.listener(
-      _handleAsyncCallback,
-    );
+    NativeCallable<RunAsyncCallbackFnFunction>.listener(_handleAsyncCallback);
 
 void _handleAsyncCallback(
   Pointer<Void> userData,
