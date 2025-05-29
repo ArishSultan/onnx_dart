@@ -347,7 +347,7 @@ extension OrtApiDartInterface on OrtApi {
     Map<String, OnnxValue> inputs,
     List<String> outputs,
   ) {
-    final pointer = malloc<Pointer<OrtValue>>();
+    final pointer = malloc<Pointer<OrtValue>>(outputs.length);
     final (outputNamesPtr, outputLen) = _dissembleOutputList(outputs);
     final (inputNamesPtr, inputValuesPtr, inputLen) = _dissembleInputMap(
       inputs,
