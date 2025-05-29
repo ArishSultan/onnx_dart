@@ -135,22 +135,8 @@ final class Session extends NativeResource<OrtSession> {
 
     final map = <String, platform_interface.TypeInfo>{};
     for (var i = 0; i < count; ++i) {
-      final name = ortApi.sessionGetIoName(ref, i, allocatorPtr, nameFn);
-      final typeInfo = TypeInfo(
-        ortApi.sessionGetIoTypeInfo(ref, i, typeInfoFn),
-      );
-
-      final actualTypeInfo = switch (typeInfo.onnxType) {
-        ONNXType.ONNX_TYPE_UNKNOWN => throw UnimplementedError(),
-        ONNXType.ONNX_TYPE_TENSOR => typeInfo.cast<OrtTensorTypeAndShapeInfo>(),
-        ONNXType.ONNX_TYPE_SEQUENCE => throw UnimplementedError(),
-        ONNXType.ONNX_TYPE_MAP => throw UnimplementedError(),
-        ONNXType.ONNX_TYPE_OPAQUE => throw UnimplementedError(),
-        ONNXType.ONNX_TYPE_SPARSETENSOR => throw UnimplementedError(),
-        ONNXType.ONNX_TYPE_OPTIONAL => throw UnimplementedError(),
-      };
-
-      map[name] = actualTypeInfo as platform_interface.TensorInfo;
+      map[ortApi.sessionGetIoName(ref, i, allocatorPtr, nameFn)] =
+          TypeInfo(ortApi.sessionGetIoTypeInfo(ref, i, typeInfoFn)).resolve();
     }
 
     return map;

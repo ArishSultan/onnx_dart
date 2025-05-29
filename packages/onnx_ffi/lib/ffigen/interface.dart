@@ -571,6 +571,15 @@ extension OrtApiDartInterface on OrtApi {
     return tensorPtr;
   }
 
+  Pointer<OrtTypeInfo> getValueTypeInfo(Pointer<OrtValue> value) {
+    final pointer = malloc<Pointer<OrtTypeInfo>>();
+    _checkStatus(
+      GetTypeInfo.asFunction<types.GetTypeInfo>(isLeaf: true)(value, pointer),
+    );
+
+    return pointer.dispose();
+  }
+
   Pointer<OrtValue> createTensorWithDataAsOrtValue<T extends TypedDataList>(
     Pointer<OrtMemoryInfo> memoryInfoPtr,
     T data,

@@ -234,3 +234,8 @@ typedef TensorAt =
       int locationValuesCount,
       Pointer<Pointer<Void>> ref,
     );
+typedef GetTypeInfo =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtValue> value,
+      Pointer<Pointer<OrtTypeInfo>> ref,
+    );
