@@ -9,10 +9,13 @@ abstract mixin class TensorInfo implements TypeInfo {
   List<int> get shape;
 
   ///
+  int get elementCount;
+
+  ///
   List<String> get symbolicShape;
 
   @override
   String toString() {
-    return 'TensorInfo(type: $type, shape: $shape)';
+    return 'TensorInfo(type: $type, elements: $elementCount, shape: $shape)';
   }
 }

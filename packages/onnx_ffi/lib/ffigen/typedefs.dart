@@ -190,6 +190,11 @@ typedef GetDimensionsCount =
       Pointer<OrtTensorTypeAndShapeInfo> info,
       Pointer<Size> ref,
     );
+typedef GetTensorShapeElementCount =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtTensorTypeAndShapeInfo> info,
+      Pointer<Size> ref,
+    );
 typedef GetDimensions =
     Pointer<OrtStatus> Function(
       Pointer<OrtTensorTypeAndShapeInfo> info,
@@ -201,11 +206,6 @@ typedef GetSymbolicDimensions =
       Pointer<OrtTensorTypeAndShapeInfo> info,
       Pointer<Pointer<Char>> dimParams,
       int dimParamsLength,
-    );
-typedef GetTensorShapeElementCount =
-    Pointer<OrtStatus> Function(
-      Pointer<OrtTensorTypeAndShapeInfo> info,
-      Pointer<Size> ref,
     );
 
 // [OrtValue] related methods
@@ -234,8 +234,13 @@ typedef TensorAt =
       int locationValuesCount,
       Pointer<Pointer<Void>> ref,
     );
+typedef GetTensorMutableData =
+    Pointer<OrtStatus> Function(
+      Pointer<OrtValue> valuePtr,
+      Pointer<Pointer<Void>> ref,
+    );
 typedef GetTypeInfo =
     Pointer<OrtStatus> Function(
-      Pointer<OrtValue> value,
+      Pointer<OrtValue> valuePtr,
       Pointer<Pointer<OrtTypeInfo>> ref,
     );

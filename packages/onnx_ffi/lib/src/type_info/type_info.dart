@@ -11,29 +11,20 @@ import '../../ffigen/interface.dart';
 import '../../base/native_resource.dart';
 
 final class TypeInfo extends NativeResource<OrtTypeInfo> {
-  TypeInfo(super.ref) {
-    attachFinalizer(
-      _finalizer ??= NativeFinalizer(ortApi.ReleaseTypeInfo.cast()),
-    );
-  }
+  TypeInfo(super.ref);
 
   NativeResource<U> cast<U extends NativeType>() {
-    final value = switch (U) {
-      OrtTensorTypeAndShapeInfo => TensorInfo(
-        ortApi.castToTensorTypeAndShapeInfo(ref),
-      ),
-      _ => throw UnimplementedError(),
-    };
-
-    if (_finalizer != null) {
-      detachFinalizer(_finalizer!);
-    }
-
-    return value as NativeResource<U>;
+    return switch (U) {
+          OrtTensorTypeAndShapeInfo => TensorInfo(
+            ortApi.castToTensorTypeAndShapeInfo(ref),
+          ),
+          _ => throw UnimplementedError(),
+        }
+        as NativeResource<U>;
   }
 
   platform_interface.TypeInfo resolve() {
-    return switch (onnxType) {
+    final value = switch (onnxType) {
       ONNXType.ONNX_TYPE_UNKNOWN => throw UnimplementedError(),
       ONNXType.ONNX_TYPE_TENSOR => TensorInfo(
         cast<OrtTensorTypeAndShapeInfo>().ref,
@@ -44,6 +35,8 @@ final class TypeInfo extends NativeResource<OrtTypeInfo> {
       ONNXType.ONNX_TYPE_SPARSETENSOR => throw UnimplementedError(),
       ONNXType.ONNX_TYPE_OPTIONAL => throw UnimplementedError(),
     };
+
+    return value;
   }
 
   ONNXType get onnxType {
@@ -57,6 +50,4 @@ final class TypeInfo extends NativeResource<OrtTypeInfo> {
   String toString() {
     return resolve().toString();
   }
-
-  static NativeFinalizer? _finalizer;
 }

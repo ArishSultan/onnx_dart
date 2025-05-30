@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:ffi' as ffi;
 import 'dart:typed_data';
 
-import 'package:onnx_ffi/src/session/run_options.dart';
 import 'package:onnx_ffi/src/values/value.dart';
+import 'package:onnx_ffi/src/session/run_options.dart';
 import 'package:onnx_platform_interface/onnx_platform_interface.dart'
     as platform_interface;
 

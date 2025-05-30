@@ -314,8 +314,9 @@ extension OrtApiDartInterface on OrtApi {
     final id = _asyncFunctions.length;
     _asyncFunctions[id] = completer;
 
-    final pointer = malloc<Pointer<OrtValue>>(outputs.length);
     final (outputNamesPtr, outputLen) = _dissembleOutputList(outputs);
+
+    final pointer = malloc<Pointer<OrtValue>>(outputLen);
     final (inputNamesPtr, inputValuesPtr, inputLen) = _dissembleInputMap(
       inputs,
     );
@@ -347,8 +348,9 @@ extension OrtApiDartInterface on OrtApi {
     Map<String, OnnxValue> inputs,
     List<String> outputs,
   ) {
-    final pointer = malloc<Pointer<OrtValue>>(outputs.length);
     final (outputNamesPtr, outputLen) = _dissembleOutputList(outputs);
+
+    final pointer = malloc<Pointer<OrtValue>>(outputLen);
     final (inputNamesPtr, inputValuesPtr, inputLen) = _dissembleInputMap(
       inputs,
     );
@@ -476,6 +478,23 @@ extension OrtApiDartInterface on OrtApi {
         tensorInfoPtr,
         pointer,
       ),
+    );
+
+    final sizeCount = pointer.value;
+    malloc.free(pointer);
+
+    return sizeCount;
+  }
+
+  int getTensorShapeElementCount(
+    Pointer<OrtTensorTypeAndShapeInfo> tensorInfoPtr,
+  ) {
+    final pointer = malloc<Size>();
+
+    _checkStatus(
+      GetTensorShapeElementCount.asFunction<types.GetDimensionsCount>(
+        isLeaf: true,
+      )(tensorInfoPtr, pointer),
     );
 
     final sizeCount = pointer.value;
@@ -647,6 +666,19 @@ extension OrtApiDartInterface on OrtApi {
 
       _ => throw UnimplementedError(),
     };
+  }
+
+  Uint8List getTensorMutableData(Pointer<OrtValue> valuePtr, int elementCount) {
+    final pointer = malloc<Pointer<Void>>();
+
+    _checkStatus(
+      GetTensorMutableData.asFunction<types.GetTensorMutableData>(isLeaf: true)(
+        valuePtr,
+        pointer,
+      ),
+    );
+
+    return pointer.dispose().cast<Uint8>().asTypedList(elementCount);
   }
 }
 

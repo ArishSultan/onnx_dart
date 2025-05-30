@@ -1,4 +1,7 @@
+import 'dart:ffi';
 import 'dart:typed_data';
+
+import 'package:onnx_platform_interface/onnx_platform_interface.dart';
 
 import 'value.dart';
 
@@ -7,7 +10,7 @@ import '../memory/allocator.dart';
 import '../../ffigen/interface.dart';
 
 final class Tensor<T extends TypedDataList> extends OnnxValue {
-  Tensor._(super.ref, this.shape);
+  Tensor.fromRef(super.ref, this.shape);
 
   final List<int> shape;
 
@@ -17,7 +20,7 @@ final class Tensor<T extends TypedDataList> extends OnnxValue {
       shape,
     );
 
-    return Tensor._(tensorRef, shape);
+    return Tensor.fromRef(tensorRef, shape);
   }
 
   factory Tensor.withData(List<int> shape, T data, {Allocator? allocator}) {
@@ -27,11 +30,18 @@ final class Tensor<T extends TypedDataList> extends OnnxValue {
       shape,
     );
 
-    return Tensor._(tensorRef, shape);
+    return Tensor.fromRef(tensorRef, shape);
   }
 
-  factory Tensor.fromBaseValue(List<int> shape, OnnxValue value) {
-    return Tensor._(value.ref, shape);
+  T get data {
+    final info = typeInfo.resolve() as TensorInfo;
+    final typedList = ortApi.getTensorMutableData(ref, info.elementCount);
+
+    return switch (info.type) {
+      Float => typedList.buffer.asFloat32List(),
+      Double => typedList.buffer.asFloat64List(),
+      _ => throw UnimplementedError(),
+    } as T;
   }
 
   num operator [](List<int> index) {

@@ -14,5 +14,10 @@ base class OnnxValue extends NativeResource<OrtValue> {
 
   TypeInfo get typeInfo => TypeInfo(ortApi.getValueTypeInfo(ref));
 
+  Tensor get asTensor {
+    detachFinalizer(_finalizer!);
+    return Tensor.fromRef(ref, (typeInfo.resolve() as TensorInfo).shape);
+  }
+
   static NativeFinalizer? _finalizer;
 }

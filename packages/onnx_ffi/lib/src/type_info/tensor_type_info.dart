@@ -10,13 +10,7 @@ import '../../base/native_resource.dart';
 
 final class TensorInfo extends NativeResource<OrtTensorTypeAndShapeInfo>
     with platform_interface.TensorInfo {
-  TensorInfo(super.ref) {
-    attachFinalizer(
-      _finalizer ??= NativeFinalizer(
-        ortApi.ReleaseTensorTypeAndShapeInfo.cast(),
-      ),
-    );
-  }
+  TensorInfo(super.ref);
 
   Type get type =>
       _type ??= switch (ortApi.getTensorElementType(ref)) {
@@ -48,6 +42,9 @@ final class TensorInfo extends NativeResource<OrtTensorTypeAndShapeInfo>
 
   int get dimensions => _dimensions ??= ortApi.getTensorShapeCount(ref);
 
+  int get elementCount =>
+      _elementCount ??= ortApi.getTensorShapeElementCount(ref);
+
   @override
   List<int> get shape => _shape ??= ortApi.getTensorShape(ref, dimensions);
 
@@ -59,7 +56,6 @@ final class TensorInfo extends NativeResource<OrtTensorTypeAndShapeInfo>
   Type? _type;
   int? _dimensions;
   List<int>? _shape;
+  int? _elementCount;
   List<String>? _symbolicShape;
-
-  static NativeFinalizer? _finalizer;
 }
